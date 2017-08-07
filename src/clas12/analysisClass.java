@@ -72,10 +72,14 @@ public class analysisClass {
     private String inputFileName = "";
     private int nEvents = -1;
 
+    /* Clusters */
     private int idEC = 0; // 0: PCAL, 1: EC-IN, 2: EC-OUT
+    private double clusterEMin = 0.;
 
     /* Here goes histograms */
     ArrayList<H1F> h1_minCrossClusterDistance;
+    ArrayList<H1F> h1_allClustersE;
+    ArrayList<H1F> h1_closerClustersE;
 
     H2F h2_ThetaPhiAllGEN;
     H2F h2_ThetaPhiAllREC;
@@ -97,6 +101,9 @@ public class analysisClass {
 
     H1F h1_vsDistanceQMREC;
     H1F h1_vsDistanceQMEFF;
+
+    H1F h1_crossVsDistanceAllREC;
+    H1F h1_crossVsDistanceAllEFF;
 
     /* my cluster helper class */
 
@@ -147,6 +154,11 @@ public class analysisClass {
             double z = clustersDataBank.getFloat("z", loop);
             double energy = clustersDataBank.getFloat("energy", loop);
             double time = clustersDataBank.getFloat("time", loop);
+
+            this.h1_allClustersE.get(sector - 1).fill(energy);
+
+            if (energy < this.clusterEMin)
+                continue;
 
             /* Following lines are used to rotate the point to the sector system */
             Point3D p0 = new Point3D(x, y, z);
@@ -257,14 +269,14 @@ public class analysisClass {
             crosses.add(track);
 
         }
-        /* Now make all the other crosses */
+        /* Now make all the other R3 crosses */
 
         for (int loop = 0; loop < nCrosses; loop++) {
             int region = crossesHBDataBank.getByte("region", loop);
             if (region != 3)
                 continue;
             short status = crossesHBDataBank.getShort("status", loop);
-            if (status == analysisClass.crossIsAssociatedToTrack) {
+            if (status == analysisClass.crossIsAssociatedToTrack) { /*Already done before*/
                 continue;
             }
             int sector = crossesHBDataBank.getByte("sector", loop);
@@ -320,14 +332,20 @@ public class analysisClass {
 
     public TriggerResult matchCrossToClusters(Cross cross, List<ECCluster> clusters) {
 
+        
+        
+        
         TriggerResult result = new TriggerResult();
         result.setResult(0);
-
-        /* Do the matching between this cross and the ECCLusters in this sector */
-        int sector = cross.get_Sector();
+        result.setMinDistance(99999.);
+        
         if (clusters.size() == 0)
             return result;
 
+        
+        /* Do the matching between this cross and the ECCLusters in this sector */
+        int sector = cross.get_Sector();
+  
         /*
          * Create a line passing by the cross point and with direction equal to
          * the cross direction
@@ -360,14 +378,21 @@ public class analysisClass {
         }
 
         /* Find the minimum distance */
-        double min = 9999.;
+        double dmin = 9999.;
+        int imin = 0;
         for (Double d : distances) {
-            if (d < min)
-                min = d;
+            if (d < dmin) {
+                dmin = d;
+                imin = distances.indexOf(d);
+            }
         }
-        h1_minCrossClusterDistance.get(sector - 1).fill(min);
+        if (dmin<50.){
+            this.h1_closerClustersE.get(sector - 1).fill(clusters.get(imin).energy);
+        }
+        h1_minCrossClusterDistance.get(sector - 1).fill(dmin);
+        
         result.setResult(1); /* At least 1 cluster was found */
-        result.setMinDistance(min);
+        result.setMinDistance(dmin);
 
         return result;
     }
@@ -389,6 +414,7 @@ public class analysisClass {
             System.out.println("Reading: " + nEvents);
         }
 
+        int nCrosses = 0;
         int nTracks = 0;
         int nTracksQP = 0;
         int nTracksQM = 0;
@@ -413,7 +439,6 @@ public class analysisClass {
             /* Make tracks and crosses */
             List<TriggerTrack> tracks = new ArrayList<TriggerTrack>();
             List<Cross> crosses = new ArrayList<Cross>();
-
             makeTriggerTracks(tracksHB, crossesHB, tracks, crosses);
 
             /* Search for R3 crosses, and fill the corresponding vectors */
@@ -433,10 +458,9 @@ public class analysisClass {
             int nClustersEC = makeCaloClusters(idEC, clustersEC, clusters);
 
             /*
-             * Now, I have the list of crosses and the list of clusters in
-             * region R3 - sector by sector. Need to match them
+             * Now, I have the list of tracks and the list of clusters - sector
+             * by sector. Need to match them
              */
-
             for (TriggerTrack track : tracks) {
 
                 double theta = Math.toDegrees(track.getMomentum().theta());
@@ -473,11 +497,30 @@ public class analysisClass {
                             h1_vsDistanceAllREC.incrementBinContent(ibin);
                         }
                     }
-
                 }
-
             }
-        }
+
+            /*
+             * Need to repeat the SAME operation using ALL crosses - that are
+             * the objects actually seen by the trigger!
+             */
+            for (Cross cross : crosses) {
+                TriggerResult trigger = matchCrossToClusters(cross, clusters[cross.get_Sector() - 1]);
+                nCrosses++;
+                if (trigger.getResult() == 0)
+                    continue; // No ECclusters at all have been found in this
+                              // sector;
+                else {
+                    double dMin = trigger.getMinDistance();
+                    for (int ibin = 0; ibin < h1_crossVsDistanceAllREC.getxAxis().getNBins(); ibin++) {
+                        double thisD = h1_crossVsDistanceAllREC.getxAxis().getBinCenter(ibin);
+                        if (dMin < thisD) {
+                            h1_crossVsDistanceAllREC.incrementBinContent(ibin);
+                        }
+                    }
+                }
+            }
+        }/* End loop on events */
 
         /* Last operations */
         h1_vsDistanceAllEFF = h1_vsDistanceAllREC.histClone("h1_vsDistanceAllEFF");
@@ -494,6 +537,14 @@ public class analysisClass {
 
         h2_ThetaPhiAllEFF = H2F.divide(h2_ThetaPhiAllREC, h2_ThetaPhiAllGEN);
 
+        
+        h1_crossVsDistanceAllEFF = h1_crossVsDistanceAllREC.histClone("h1_crossVsDistanceAllEFF");
+        h1_crossVsDistanceAllEFF.setTitle("h1_crossVsDistanceAllEFF");
+        h1_crossVsDistanceAllEFF.divide(1. * nCrosses);
+
+        
+        
+        
         this.showHistograms();
 
     }
@@ -518,6 +569,8 @@ public class analysisClass {
                 this.nEvents = Integer.parseInt(splited[1]);
             } else if (splited[0].contains("idEC")) {
                 this.idEC = Integer.parseInt(splited[1]);
+            } else if (splited[0].contains("clusterE")) {
+                this.clusterEMin = Double.parseDouble(splited[1]);
             }
         }
 
@@ -559,8 +612,20 @@ public class analysisClass {
         h1_minCrossClusterDistance = new ArrayList<H1F>();
 
         for (int isector = 1; isector <= 6; isector++) {
-            h1_minCrossClusterDistance.add(new H1F("minCrossClusterDistance_" + isector, "minCrossClusterDistance_"
+            h1_minCrossClusterDistance.add(new H1F("h1_minCrossClusterDistance_" + isector, "minCrossClusterDistance_"
                     + isector + ";distance - cm", 100, 0, 500));
+        }
+
+        h1_allClustersE = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allClustersE.add(new H1F("h1_allClustersE_" + isector, "h1_allClustersE_" + isector + ";Energy (GeV)",
+                    100, 0, .3));
+        }
+
+        h1_closerClustersE = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_closerClustersE.add(new H1F("h1_cloaserClustersE_" + isector, "h1_closerClustersE_" + isector
+                    + ";Energy (GeV)", 100, 0, .3));
         }
 
         h2_ThetaPhiAllGEN = new H2F("h2_ThetaPhiAllGEN", "h2_ThetaPhiAllGEN", 100, -180., 180., 100, 0, 45.);
@@ -576,18 +641,42 @@ public class analysisClass {
         h1_vsDistanceQMREC = new H1F("h1_vsDistanceQMREC", "h1_vsDistanceQMEFF", 400, 0., 400.);
         h1_vsDistanceQMEFF = new H1F("h1_vsDistanceQMEFF", "h1_vsDistanceQMEFF", 400, 0., 400.);
 
+        h1_crossVsDistanceAllREC = new H1F("h1_crossVsDistanceAllREC", "h1_crossVsDistanceAllEFF", 400, 0., 400.);
+        h1_crossVsDistanceAllEFF = new H1F("h1_crossVsDistanceAllEFF", "h1_crossVsDistanceAllEFF", 400, 0., 400.);
+
     }
 
     private void showHistograms() {
 
         TCanvas trk1 = new TCanvas("trk1", 1600, 1000);
-        trk1.cd(0);
+        trk1.divide(2, 2);
+        trk1.cd(1);
         for (int isector = 1; isector <= 6; isector++) {
             h1_minCrossClusterDistance.get(isector - 1).setLineColor(isector);
             if (isector == 1) {
                 trk1.draw(h1_minCrossClusterDistance.get(isector - 1));
             } else {
                 trk1.draw(h1_minCrossClusterDistance.get(isector - 1), "same");
+            }
+        }
+
+        trk1.cd(2);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allClustersE.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_allClustersE.get(isector - 1));
+            } else {
+                trk1.draw(h1_allClustersE.get(isector - 1), "same");
+            }
+        }
+
+        trk1.cd(3);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_closerClustersE.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_closerClustersE.get(isector - 1));
+            } else {
+                trk1.draw(h1_closerClustersE.get(isector - 1), "same");
             }
         }
 
@@ -609,6 +698,11 @@ public class analysisClass {
         trk2.cd(5);
         trk2.draw(h2_ThetaPhiAllEFF, "colz");
 
+        TCanvas trk3 = new TCanvas("trk3", 1600, 1000);
+        trk3.divide(2, 2);
+        trk3.cd(0);
+        trk3.draw(h1_crossVsDistanceAllEFF);
+        
     }
 
 }

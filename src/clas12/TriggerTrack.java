@@ -1,7 +1,5 @@
 package clas12;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.jlab.rec.dc.cross.Cross;
 import org.jlab.clas.physics.Vector3;
 
@@ -9,6 +7,10 @@ import org.jlab.clas.physics.Vector3;
 public class TriggerTrack extends Cross{
 
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
     private byte charge;
     private Vector3 momentum;
 
