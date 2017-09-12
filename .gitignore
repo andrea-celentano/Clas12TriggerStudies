@@ -1,2 +1,7 @@
 #compiled code
 .class
+
+#other stuffs
+.checkstyle
+.classpath
+.project
