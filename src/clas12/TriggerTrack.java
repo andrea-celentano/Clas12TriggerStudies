@@ -1,6 +1,7 @@
 package clas12;
 
 import org.jlab.rec.dc.cross.Cross;
+
 import org.jlab.clas.physics.Vector3;
 import org.jlab.clas.physics.Particle;
 /*My track class simply extends the R3Cross with momentum-charge information*/

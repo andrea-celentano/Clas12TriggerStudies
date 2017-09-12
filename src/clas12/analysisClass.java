@@ -88,11 +88,10 @@ public class analysisClass {
     int nTracks = 0;
     int nTracksQP = 0;
     int nTracksQM = 0;
-    
+
     int nEvents1Rec = 0;
     int nEvents2Rec = 0;
     int nEvents3Rec = 0;
-    
 
     ArrayList<Integer> nTracks_vsP = new ArrayList<Integer>();
     ArrayList<Integer> nTracksQP_vsP = new ArrayList<Integer>();
@@ -190,9 +189,9 @@ public class analysisClass {
 
         int nrows = genParticlesDB.rows();
         for (int loop = 0; loop < nrows; loop++) {
-            Particle genParticle = new Particle(genParticlesDB.getInt("pid", loop), genParticlesDB.getFloat("px", loop), genParticlesDB.getFloat("py",
-                    loop), genParticlesDB.getFloat("pz", loop), genParticlesDB.getFloat("vx", loop), genParticlesDB.getFloat("vy", loop),
-                    genParticlesDB.getFloat("vz", loop));
+            Particle genParticle = new Particle(genParticlesDB.getInt("pid", loop), genParticlesDB.getFloat("px", loop), genParticlesDB.getFloat("py", loop),
+                    genParticlesDB.getFloat("pz", loop), genParticlesDB.getFloat("vx", loop), genParticlesDB.getFloat("vy", loop), genParticlesDB.getFloat(
+                            "vz", loop));
             genParticles.add(genParticle);
             nGenParticles++;
         }
@@ -220,7 +219,10 @@ public class analysisClass {
 
             this.h1_allClustersE.get(sector - 1).fill(energy);
 
-            if (energy < this.clusterEMin) continue;
+            if (energy < this.clusterEMin) continue; /*
+                                                      * just consider clusters
+                                                      * above my thr
+                                                      */
 
             /* Following lines are used to rotate the point to the sector system */
             Point3D p0 = new Point3D(x, y, z);
@@ -243,7 +245,7 @@ public class analysisClass {
 
     /*
      * Make trigger tracks and all-R3 tracks, in SECTOR reference frame
-     * (momentum of the track is in CLAS frame!
+     * (momentum of the track is in CLAS frame!)
      */
     private void makeTriggerTracks(DataBank tracksHBDataBank, DataBank crossesHBDataBank, List<TriggerTrack> tracks, List<Cross> crosses) {
         /* First, make all tracks */
@@ -339,10 +341,16 @@ public class analysisClass {
             int region = crossesHBDataBank.getByte("region", loop);
             if (region != 3) continue;
             short status = crossesHBDataBank.getShort("status", loop);
-            /* Already done before */
+
+
+            /*
+             * Already done before for crosses associated to tracks, need to
+             * avoid double-counting
+             */
             if (status == analysisClass.crossIsAssociatedToTrack) {
                 continue;
             }
+
             int sector = crossesHBDataBank.getByte("sector", loop);
 
             int id = crossesHBDataBank.getShort("id", loop);
@@ -576,6 +584,7 @@ public class analysisClass {
          * Now, matchingDistances contains, for each cross in this event that
          * has been matched, the corresponding distance
          */
+        int toPrint = 1;
         for (int ibin = 0; ibin < h1_vsDistance1REC.getxAxis().getNBins(); ibin++) {
             thisD = h1_vsDistance1REC.getxAxis().getBinCenter(ibin);
             nMatchings = 0;
@@ -608,46 +617,61 @@ public class analysisClass {
      * This method takes as input the MC bank - with the generated particles -
      * and the reconstructed tracks. For each generated particle, it tries to
      * figure out if that particle has been reconstructed properly. The method
-     * returns the number of reconstructed tracks. To check if a particle has been reconstructed:
+     * returns the number of reconstructed tracks. To check if a particle has
+     * been reconstructed:
      * 
-     * 1) Loop over reconstructed particles in the same sector only
-     * 2) Consider the same charge
-     * 3) Check delta momentum
-     * 4) Check delta theta
+     * 1) Loop over reconstructed particles in the same sector only --->NO. The
+     * sector computed from gen. particle momentum may be different from the
+     * actual particle sector due to solenoidal field!!! 2) Consider the same
+     * charge 3) Check delta momentum 4) Check delta theta 5) Check delta phi
+     * (this is a "sector-like" check, but the reconstructed track considers the
+     * phi angle properly!)
      */
-    private int checkReconstructedTracks(List<Particle> genParticles,List<TriggerTrack> recParticles) {
+    private int checkReconstructedTracks(List<Particle> genParticles, List<TriggerTrack> recParticles) {
         int nReconstructed = 0;
 
-        int sector,charge;
-        double phi,P,theta;
-      
-        for (Particle genParticle : genParticles){
-            phi=genParticle.phi();
-            P=genParticle.p();
-            theta=genParticle.theta();
-            charge=genParticle.charge();
-            
-            if (phi<0) phi=phi+2*Math.PI;
-            phi = phi + Math.toRadians(analysisClass.phiAngle/2);
-            if (phi>2*Math.PI) phi=phi-2*Math.PI;
+        int sector, charge;
+        double phi, P, theta;
+
+        for (Particle genParticle : genParticles) {
+            phi = genParticle.phi();
+            P = genParticle.p();
+            theta = genParticle.theta();
+            charge = genParticle.charge();
+
+            /*if (phi < 0) phi = phi + 2 * Math.PI;
+            phi = phi + Math.toRadians(analysisClass.phiAngle / 2);
+            if (phi > 2 * Math.PI) phi = phi - 2 * Math.PI;
             sector = (int) (Math.toDegrees(phi) / analysisClass.phiAngle);
-            sector = sector +1;
+            sector = sector + 1;*/
+
+        
+
+            for (TriggerTrack recParticle : recParticles) {
+
+            
+                /* Select same sector, same charge */
+                // if (recParticle.get_Sector()!=sector) continue; //A.C.,
+                // sector is computed from gen. momentum, and does not consider
+                // sol. field
+                
+                if (recParticle.getCharge() != charge) continue;
+                /* Very basic cuts over momentum and theta */
+                if (Math.abs(recParticle.getMomentum().mag() - P) > 0.4) continue;
+                if (Math.abs(recParticle.getMomentum().theta() - theta) > Math.toRadians(10.)) continue;
+                if (Math.abs(recParticle.getMomentum().phi() - phi) > Math.toRadians(40.)) continue;
           
-            for (TriggerTrack recParticle : recParticles){
                 
-                /*Select same sector, same charge*/
-                if (recParticle.get_Sector()!=sector) continue;
-                if (recParticle.getCharge()!=charge) continue;
                 
-                /*Very basic cuts over momentum and theta*/
-                if (Math.abs(recParticle.getMomentum().mag()-P)>0.5) continue;
-                if (Math.abs(recParticle.getMomentum().theta()-theta)>Math.toRadians(10.)) continue;
-             
+           
                 recParticle.setGenParticle(genParticle);
                 nReconstructed++;
-            }          
+                break; // if we arrive here - it means the matching was found.
+                       // No reason to move forward in the loop
+
+            }
         }
-        
+
         return nReconstructed;
     }
 
@@ -668,10 +692,11 @@ public class analysisClass {
         }
 
         while (reader.hasEvent() == true && nevent < nEvents) {
-            DataEvent event = reader.getNextEvent();
             nevent++;
+            DataEvent event = reader.getNextEvent();
+            if (nevent == 0) continue; // skip evt 0
+
             if (nevent % 10000 == 0) System.out.println("Analyzed " + nevent + " events" + " " + nmultitrk);
-            // event.show();
 
             /* Get generated (MC) particles */
             DataBank genParticlesDB = event.getBank("MC::Particle");
@@ -694,13 +719,14 @@ public class analysisClass {
             List<Cross> crosses = new ArrayList<Cross>();
             makeTriggerTracks(tracksHB, crossesHB, tracks, crosses);
 
-            /*Check how many MC particles have been reconstructed*/
-            int nReconstructedParticles=checkReconstructedTracks(genParticles,tracks);
-      
-            if (nReconstructedParticles>=1) nEvents1Rec++;
-            if (nReconstructedParticles>=2) nEvents2Rec++;
-            if (nReconstructedParticles>=3) nEvents3Rec++;
-            
+            /* Check how many MC particles have been reconstructed */
+            int nReconstructedParticles = checkReconstructedTracks(genParticles, tracks);
+       
+
+            if (nReconstructedParticles >= 1) nEvents1Rec++;
+            if (nReconstructedParticles >= 2) nEvents2Rec++;
+            if (nReconstructedParticles >= 3) nEvents3Rec++;
+
             /* Get calorimeter clusters - later will search for PCAL */
             DataBank clustersEC = event.getBank("ECAL::clusters");
 
@@ -1057,6 +1083,13 @@ public class analysisClass {
         ceff.draw(h1_vsDistance3EFF, "same");
 
         ceff.cd(1);
+        ceff.draw(h1_vsDistance1REC);
+        h1_vsDistance2REC.setLineColor(2);
+        ceff.draw(h1_vsDistance2REC, "same");
+        h1_vsDistance3REC.setLineColor(3);
+        ceff.draw(h1_vsDistance3REC, "same");
+
+        ceff.cd(2);
         ceff.draw(h1_vsDistance1MatchedCrossesEFF);
         h1_vsDistance2MatchedCrossesEFF.setLineColor(2);
         ceff.draw(h1_vsDistance2MatchedCrossesEFF, "same");
