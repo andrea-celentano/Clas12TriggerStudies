@@ -4,8 +4,11 @@ import org.jlab.rec.dc.cross.Cross;
 
 import org.jlab.clas.physics.Vector3;
 import org.jlab.clas.physics.Particle;
-/*My track class simply extends the R3Cross with momentum-charge information*/
-/*Also add info regarding the fact this track is associated with a generated particle or not
+/*My track class simply extends the R3Cross with momentum-charge information.
+ * 
+ * Basically, this object is created for a Track with a R3 Cross, and stores the R3 cross info and momentum-charge info (from the track)
+ * 
+/* Also add info regarding the fact this track is associated with a generated particle or not
  * (If not, this is a "fake" track)
  */
 public class TriggerTrack extends Cross{
