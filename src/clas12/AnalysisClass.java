@@ -25,7 +25,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Plane3D;
 import org.jlab.geom.prim.Line3D;
 import org.jlab.rec.dc.cross.Cross;
-import org.jlab.rec.tof.hit.ftof.Hit;
+
 
 import java.util.List;
 import java.util.ArrayList;
@@ -812,7 +812,7 @@ public class AnalysisClass {
          */
         Vector3D n = new Vector3D(Math.sin(Math.toRadians(AnalysisClass.thetaAngleFTOF2)), 0., Math.cos(Math.toRadians(AnalysisClass.thetaAngleFTOF2)));
         Point3D p = new Point3D(0, 0, AnalysisClass.l0FTOF2 / Math.cos(Math.toRadians(AnalysisClass.thetaAngleFTOF2)));
-        planeEC = new Plane3D(p, n);
+        planeFTOF2 = new Plane3D(p, n);
     }
 
     private void setupHistograms() {
