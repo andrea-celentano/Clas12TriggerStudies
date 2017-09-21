@@ -11,90 +11,200 @@ import org.jlab.rec.dc.cross.Cross;
 
 public class CrossMatcherToFTOFHits extends CrossMatcher {
 
-	private int layerFTOF;
+    private int layerFTOF;
 
-	/* Panel 2 FTOT */
-	private static double thetaAngleFTOF2 = 58.11;
-	private static double l0FTOF2 = 605.397; /*
-												 * See my notes on 14/9/2017. Extracted from D. Carman description of CLAS12
-												 * FTOF
-												 */
-	private double l0FTOF, thetaAngleFTOF;
-	private Plane3D planeFTOF;
+    /* Panel 2 FTOT */
+    private static double thetaAnglePlaneFTOF2 = 58.11;
+    private static double thetaAngleMINFTOF2 = 34.698;
+    private static double R2FTOF2 = 659.71;
+    private static double counterWidthFTOF2 = 22;
 
-	public CrossMatcherToFTOFHits(AnalysisClass ana, int layer) {
-		super(ana);
-		layerFTOF = layer;
-	}
+    /* Following are key-parameters defining FTOF position */
+    private double R2FTOF, thetaAnglePlaneFTOF, thetaAngleMINFTOF, counterWidthFTOF;
 
-	public void setupGeo() {
+    /* Computed parameters */
+    private double l0FTOF;
+    private double hFTOF; // the distance between the
+                          // (0,0,l0FTOF/cos(thetaAngleFTOF)) point and the
+                          // start of FTOF along the FTOF-plane middle line
+    private Plane3D planeFTOF;
 
-		switch (this.layerFTOF) {
-		case 1:
-		case 2:
-			System.out.println("not yet implemented");
-			break;
-		case 3:
-			l0FTOF = CrossMatcherToFTOFHits.l0FTOF2;
-			thetaAngleFTOF = CrossMatcherToFTOFHits.thetaAngleFTOF2;
+    /* distances min values */
+    private double minDistanceCSI, minDistanceY;
 
-		}
+    public CrossMatcherToFTOFHits(AnalysisClass ana, int layer) {
+        super(ana);
+        layerFTOF = layer;
+    }
 
-		Vector3D n = new Vector3D(Math.sin(Math.toRadians(this.thetaAngleFTOF)), 0., Math.cos(Math.toRadians(this.thetaAngleFTOF)));
-		Point3D p = new Point3D(0, 0, this.l0FTOF / Math.cos(Math.toRadians(this.thetaAngleFTOF)));
-		planeFTOF = new Plane3D(p, n);
-	}
+    public double getMinDistanceCSI() {
+        return minDistanceCSI;
+    }
 
-	/*
-	 * Given a cross (in the SECTOR ref. frame) and a list of hits in the FTOF
-	 * system, in that sector, return the minimum distance between the track -
-	 * projected to the FTOF plane - and hits. The Hit geometrical information is
-	 * basically contained in the "paddle" identifier. Return -1 if no hits are
-	 * present
-	 */
-	public double matchCrossToFTOFHits(Cross cross, List<SimpleTOFHit> hits) {
+    public void setMinDistanceCSI(double minDistanceCSI) {
+        this.minDistanceCSI = minDistanceCSI;
+    }
 
-		double minDist = -1;
-		double d;
-		int imin = 0;
-		ArrayList<Double> distances = new ArrayList<Double>();
-		if (hits.size() == 0) return minDist;
+    public double getMinDistanceY() {
+        return minDistanceY;
+    }
 
-		/* Do the matching between this cross and the FTOFHits in this sector */
-		int sector = cross.get_Sector();
+    public void setMinDistanceY(double minDistanceY) {
+        this.minDistanceY = minDistanceY;
+    }
 
-		/*
-		 * Create a line passing by the cross point and with direction equal to the
-		 * cross direction
-		 */
-		Point3D pCross = cross.get_Point(); /* passage point */
-		Vector3D vCross = cross.get_Dir().toVector3D();/* Direction */
-		Line3D rayCross = new Line3D(pCross, vCross);
+    public double barLength(int barID) {
+        /* See TOF-Geom note */
+        double L = 0;
+        switch (this.layerFTOF) {
+        case 1:
+        case 2:
+            System.out.println("not yet implemented");
+            break;
+        case 3:
+            L = 13.73 * barID + 357.77;
+            break;
+        }
+        return L;
+    }
 
-		
-		
-		
-		/* Determine the intersection between this line and the FTOF-plane */
-		Point3D intersectCross = new Point3D();
-		if ((planeFTOF.intersectionRay(rayCross, intersectCross) != 1)) {
-			System.out.println("The given cross does not intersect TOF plane?" + pCross.toString() + " " + vCross.toString());
-			return minDist;
-		}
-		
-		/*
-		 * now, find the clusters in this sector, and compute the distance
-		 */
+    public void setupGeo() {
 
-		for (SimpleTOFHit hit : hits) {
-			matchCrossToFTOFHit(intersectCross,hit);
-		}
+        switch (this.layerFTOF) {
+        case 1:
+        case 2:
+            System.out.println("not yet implemented");
+            break;
+        case 3:
 
-		return 0;
-	}
-	
-	/*This is doing the merge between the Cross projected on the TOF plane and the TOF hit*/
-	public void matchCrossToFTOFHit(Point3D crossProj, SimpleTOFHit hit) {
-	//	System.out.println(crossProj.toString());
-	}
-	
+            /*
+             * See my notes on 14/9/2017. Extracted from D. Carman description
+             * of CLAS12 FTOF
+             */
+            thetaAnglePlaneFTOF = CrossMatcherToFTOFHits.thetaAnglePlaneFTOF2;
+            thetaAngleMINFTOF = CrossMatcherToFTOFHits.thetaAngleMINFTOF2;
+            R2FTOF = CrossMatcherToFTOFHits.R2FTOF2;
+            counterWidthFTOF = CrossMatcherToFTOFHits.counterWidthFTOF2;
+        }
+
+        l0FTOF = this.R2FTOF * Math.cos(Math.toRadians(this.thetaAnglePlaneFTOF - this.thetaAngleMINFTOF));
+        hFTOF = this.R2FTOF * Math.sin(Math.toRadians(this.thetaAngleMINFTOF)) / Math.cos(Math.toRadians(this.thetaAnglePlaneFTOF));
+
+        Vector3D n = new Vector3D(Math.sin(Math.toRadians(this.thetaAnglePlaneFTOF)), 0., Math.cos(Math.toRadians(this.thetaAnglePlaneFTOF)));
+        Point3D p = new Point3D(0, 0, this.l0FTOF / Math.cos(Math.toRadians(this.thetaAnglePlaneFTOF)));
+        planeFTOF = new Plane3D(p, n);
+    }
+
+    /*
+     * Given a cross (in the SECTOR ref. frame) and a list of hits in the FTOF
+     * system, in that sector, return the minimum distance between the track -
+     * projected to the FTOF plane - and hits. The Hit geometrical information
+     * is basically contained in the "paddle" identifier. Return -1 if no hits
+     * are present
+     */
+    public boolean matchCrossToFTOFHits(Cross cross, List<SimpleTOFHit> hits) {
+
+        boolean ret = false;
+        if (hits.size() == 0) return false;
+
+        /* Do the matching between this cross and the FTOFHits in this sector */
+        int sector = cross.get_Sector();
+
+        /*
+         * Create a line passing by the cross point and with direction equal to
+         * the cross direction
+         */
+        Point3D pCross = cross.get_Point(); /* passage point */
+        Vector3D vCross = cross.get_Dir().toVector3D();/* Direction */
+        Line3D rayCross = new Line3D(pCross, vCross);
+
+        /* Determine the intersection between this line and the FTOF-plane */
+        Point3D intersectCross = new Point3D();
+        if ((planeFTOF.intersectionRay(rayCross, intersectCross) != 1)) {
+            System.out.println("The given cross does not intersect TOF plane? event: " + analysisClass.nevent+" sector: "+cross.get_Sector()+" "+pCross.toString() + " " + vCross.toString());
+            return false;
+        }
+
+        for (SimpleTOFHit hit : hits) {
+            if (matchCrossToFTOFHit(intersectCross, hit)) {
+                analysisClass.getHistogram2D("h2_FTOF2EnergyMatched_LR").fill(hit.get_EnergyL(), hit.get_EnergyR());            
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    /*
+     * This is doing the merge between the Cross projected on the TOF plane and
+     * the TOF hit
+     */
+    public boolean matchCrossToFTOFHit(Point3D crossProj, SimpleTOFHit hit) {
+        /*
+         * Get the cross coordinates in the TOF-plane system (see 14/9/2017
+         * notes)
+         */
+
+        boolean ret = false;
+        double y = crossProj.y();
+        double csi = Math.sqrt(crossProj.x() * crossProj.x() + (crossProj.z() - l0FTOF / Math.cos(Math.toRadians(thetaAnglePlaneFTOF))) * (crossProj.z() - l0FTOF / Math.cos(Math.toRadians(thetaAnglePlaneFTOF))));
+
+        /* The bar coordinates */
+        int paddleN = hit.get_Paddle();
+        double csiBar = hFTOF - counterWidthFTOF / 2 + paddleN * counterWidthFTOF;
+        double csiBarMin = csiBar - counterWidthFTOF / 2;
+        double csiBarMax = csiBar + counterWidthFTOF / 2;
+
+        double yBar = 0;
+        double yBarMin = yBar - barLength(paddleN) / 2;
+        double yBarMax = yBar + barLength(paddleN) / 2;
+
+        /* Now check */
+
+        /* Case1: crossProj within counter area */
+        if ((csi > csiBarMin) && (csi < csiBarMax) && (y > yBarMin) && (y < yBarMax)) {
+            ret = true;
+        }
+        /* Case2: crossProj within csi but not y */
+        else if ((csi > csiBarMin) && (csi < csiBarMax)) {
+            if ((y > yBarMax) && ((y - yBarMax) < minDistanceY))
+                ret = true;
+            else if ((y < yBarMin) && ((yBarMin - y) < minDistanceY)) ret = true;
+        }
+        /* Case3: crossProj within y but not csi */
+        else if ((y > yBarMin) && (y < yBarMax)) {
+            if ((csi > csiBarMax) && ((csi - csiBarMax) < minDistanceCSI))
+                ret = true;
+            else if ((csi < csiBarMin) && ((csiBarMin - csi) < minDistanceCSI)) ret = true;
+
+        }
+        /* Case4: crossProj outside any dimension */
+        else {
+            double yBorder, csiBorder, distance;
+            yBorder = 0;
+            csiBorder = 0;
+            if ((csi > csiBarMax) && (y > yBarMax)) {
+                csiBorder = csiBarMax;
+                yBorder = yBarMax;
+            } else if ((csi > csiBarMax) && (y < yBarMin)) {
+                csiBorder = csiBarMax;
+                yBorder = yBarMin;
+            } else if ((csi < csiBarMin) && (y < yBarMin)) {
+                csiBorder = csiBarMin;
+                yBorder = yBarMin;
+            } else if ((csi < csiBarMin) && (y > yBarMax)) {
+                csiBorder = csiBarMin;
+                yBorder = yBarMax;
+            }
+
+            distance = ((csi - csiBorder) * (csi - csiBorder)) / (minDistanceCSI * minDistanceCSI);
+            distance += ((y - yBorder) * (y - yBorder)) / (minDistanceY * minDistanceY);
+            if (distance <= 1) ret = true;
+
+        }
+
+        return ret;
+
+    }
+
 }

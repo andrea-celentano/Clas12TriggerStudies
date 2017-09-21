@@ -87,6 +87,7 @@ public class CrossMatcherToECClusters extends CrossMatcher{
 		int imin = 0;
 		ArrayList<Double> distances = new ArrayList<Double>();
 
+				
 		if (clusters.size() == 0) return minDist;
 
 		/* Do the matching between this cross and the ECCLusters in this sector */
@@ -127,15 +128,15 @@ public class CrossMatcherToECClusters extends CrossMatcher{
 		}
 		
 		if (minDist < this.minDistance) {
-			analysisClass.getHistogram("h1_closerClustersE_"+sector).fill(clusters.get(imin).energy);
+			analysisClass.getHistogram1D("h1_closerClustersE_"+sector).fill(clusters.get(imin).energy);
 		}
-		analysisClass.getHistogram("h1_minCrossClusterDistance_"+sector).fill(minDist);
+		analysisClass.getHistogram1D("h1_minCrossClusterDistance_"+sector).fill(minDist);
 
 		return minDist;
 	}
 
 	public boolean distanceIsSmallerThanMin(double distance) {
-		if (distance < this.minDistance)
+		if ((distance < this.minDistance) && (distance>0))
 			return true;
 		else
 			return false;

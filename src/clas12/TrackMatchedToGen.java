@@ -1,6 +1,6 @@
 package clas12;
 
-import org.jlab.rec.dc.cross.Cross;
+
 
 import org.jlab.clas.physics.Vector3;
 import org.jlab.clas.physics.Particle;
@@ -10,8 +10,10 @@ import org.jlab.clas.physics.Particle;
  * 
 /* Also add info regarding the fact this track is associated with a generated particle or not
  * (If not, this is a "fake" track)
+ * 
+ *
  */
-public class TriggerTrack extends Cross{
+public class TrackMatchedToGen extends MatchedCross{
 
 
     /**
@@ -22,7 +24,15 @@ public class TriggerTrack extends Cross{
     private byte charge;
     private Vector3 momentum;
     private Particle genParticle=new Particle();
-    private Boolean isAssociatedToGenParticle=false;
+    
+    private Boolean isAssociatedToGenParticle;
+    private int idGen;
+   
+    public TrackMatchedToGen(int sector) {
+        super(sector);
+        idGen=-1;
+        isAssociatedToGenParticle=false;
+    }
     
     public byte getCharge() {
         return charge;
@@ -40,22 +50,31 @@ public class TriggerTrack extends Cross{
         this.momentum = momentum;
     }
     
-    public TriggerTrack(int sector) {
-        super(sector,3,0);
-    }
+
     
     public Particle getGenParticle(){
         return genParticle;
     }
     
-    public void setGenParticle(Particle particle){
+    public void setGenParticle(int id,Particle particle){
         genParticle.copy(particle);
         this.isAssociatedToGenParticle=true;
+        this.idGen = id;
     }
     
     public Boolean isAssociatedToGenParticle(){
         return isAssociatedToGenParticle;
     }
+
+    public int getIdGen() {
+        return idGen;
+    }
+
+    public void setIdGen(int idGen) {
+        this.idGen = idGen;
+    }
+
+
     
     
 }
