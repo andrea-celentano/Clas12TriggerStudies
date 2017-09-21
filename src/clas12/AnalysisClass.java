@@ -64,7 +64,10 @@ public class AnalysisClass {
 
     /* TOF */
     private double minE_FTOF2 = 0.1;
+    private double minE_FTOF1B = 0.1;
     List<SimpleTOFHit>[] hitsFTOF2;
+    List<SimpleTOFHit>[] hitsFTOF1B;
+    List<SimpleTOFHit>[] hitsFTOF1A;
 
     /* Matching DC-ECAL */
     CrossMatcherToECClusters ECMatcher;
@@ -75,6 +78,11 @@ public class AnalysisClass {
     private double minDistanceCSI_FTOF2 = 5.;
     private double minDistanceY_FTOF2 = 10.;
 
+    /* Matching DC-FTOF1B */
+    CrossMatcherToFTOFHits FTOF1BMatcher;
+    private double minDistanceCSI_FTOF1B = 5.;
+    private double minDistanceY_FTOF1B = 10.;
+
     /* Momentum array */
     ArrayList<Double> Parray; // Index of lower-bound momenta (a part from
                               // latest, that is last bin
@@ -83,8 +91,8 @@ public class AnalysisClass {
     /* Variables */
     boolean doShowHistograms = false;
     int nevent = -1;
-    
-    int nTracksWithR3Cross = 1; /*To avoid divide-by-0*/
+
+    int nTracksWithR3Cross = 1; /* To avoid divide-by-0 */
     int nTracksQPWithR3Cross = 1;
     int nTracksQMWithR3Cross = 1;
 
@@ -183,21 +191,25 @@ public class AnalysisClass {
     H1F h1_vsDistance1TRIGGER2;
     H1F h1_vsDistance1EFF;
     H1F h1_vsDistance1EFF2;
-    
-    
+
     H1F h1_vsDistance2TRIGGER;
     H1F h1_vsDistance2TRIGGER2;
     H1F h1_vsDistance2EFF;
     H1F h1_vsDistance2EFF2;
-    
+
     H1F h1_vsDistance3TRIGGER;
     H1F h1_vsDistance3TRIGGER2;
     H1F h1_vsDistance3EFF;
     H1F h1_vsDistance3EFF2;
 
-    
     H2F h2_FTOF2EnergyAll_LR;
     H2F h2_FTOF2EnergyMatched_LR;
+
+    H2F h2_FTOF1BEnergyAll_LR;
+    H2F h2_FTOF1BEnergyMatched_LR;
+
+    H2F h2_FTOF1AEnergyAll_LR;
+    H2F h2_FTOF1AEnergyMatched_LR;
 
     H2F h2tmp;
 
@@ -225,10 +237,19 @@ public class AnalysisClass {
         switch (layer) {
         case 1:
         case 2:
+            this.matchToFTOF1BHits(crosses, hits);
             return; // not yet implemented
         case 3:
             this.matchToFTOF2Hits(crosses, hits);
             return;
+        }
+    }
+
+    private void matchToFTOF1BHits(List<? extends MatchedCross> crosses, List<SimpleTOFHit> hits[]) {
+        boolean isMatched = false;
+        for (MatchedCross cross : crosses) {
+            isMatched = this.FTOF1BMatcher.matchCrossToFTOFHits(cross, hits[cross.get_Sector() - 1]);
+            cross.setIsMatchedToFTOF1B(isMatched);
         }
     }
 
@@ -258,16 +279,16 @@ public class AnalysisClass {
         int idGen = 0;
 
         int nMatchingsCrossesEC = 0;
-        int nMatchingsCrossesFTOF = 0;
-        int nMatchingsCrossesBoth = 0;
+        int nMatchingsCrossesFTOF2 = 0;
+        int nMatchingsCrossesFTOF1B = 0;
 
-        Integer tmpI;     
-          
+        Integer tmpI;
+
         for (Particle particle : genParticles) {
 
-            nMatchingsCrossesFTOF = 0;
+            nMatchingsCrossesFTOF1B = 0;
+            nMatchingsCrossesFTOF2 = 0;
             nMatchingsCrossesEC = 0;
-            nMatchingsCrossesBoth = 0;
 
             /* Get the variables */
             theta = Math.toDegrees(particle.theta());
@@ -275,12 +296,10 @@ public class AnalysisClass {
             p = particle.p();
             q = particle.charge();
             pid = particle.pid();
-            
+
             imom = this.getMomentumIndex(p);
             if (imom < 0) continue;
-            
-           
-            
+
             /* Fill the "generated histograms" */
             h2_ThetaPhiAllGEN.fill(phi, theta);
             h2_ThetaPhiAllGEN_vsP.get(imom).fill(phi, theta);
@@ -299,35 +318,31 @@ public class AnalysisClass {
              * histograms
              */
             for (TrackMatchedToGen track : tracks) {
-               
-              
-                              
-     //          if (track.getIdGen() == idGen) {
-                if (true){
+
+                // if (track.getIdGen() == idGen) {
+                if (true) {
                     nTracksWithR3Cross++;
-                    tmpI= nTracks_vsP.get(imom);
+                    tmpI = nTracks_vsP.get(imom);
                     tmpI++;
-                    nTracks_vsP.set(imom,tmpI);
+                    nTracks_vsP.set(imom, tmpI);
                     h2_ThetaPhiAllREC.fill(phi, theta);
                     h2_ThetaPhiAllREC_vsP.get(imom).fill(phi, theta);
 
-                  
-                    
                     if (q > 0) {
                         nTracksQPWithR3Cross++;
-                        tmpI= nTracksQP_vsP.get(imom);
+                        tmpI = nTracksQP_vsP.get(imom);
                         tmpI++;
-                        nTracksQP_vsP.set(imom,tmpI);
-                        
+                        nTracksQP_vsP.set(imom, tmpI);
+
                         h2_ThetaPhiQPREC.fill(phi, theta);
                         h2_ThetaPhiQPREC_vsP.get(imom).fill(phi, theta);
                     }
                     if (q < 0) {
                         nTracksQMWithR3Cross++;
-                        tmpI= nTracksQM_vsP.get(imom);
+                        tmpI = nTracksQM_vsP.get(imom);
                         tmpI++;
-                        nTracksQM_vsP.set(imom,tmpI);
-                        
+                        nTracksQM_vsP.set(imom, tmpI);
+
                         h2_ThetaPhiQMREC.fill(phi, theta);
                         h2_ThetaPhiQMREC_vsP.get(imom).fill(phi, theta);
                     }
@@ -347,26 +362,28 @@ public class AnalysisClass {
                             h1_vsDistanceAllREC.incrementBinContent(ibin);
                             h1_vsDistanceAllREC_vsP.get(imom).incrementBinContent(ibin);
                         }
-                    }                  
+                    }
                 }
             }
 
             /* now count the number of cross-matchings */
             for (MatchedCross cross : crosses) {
                 if (this.ECMatcher.distanceIsSmallerThanMin(cross.getMinDistanceEC())) nMatchingsCrossesEC++;
-                if (cross.isMatchedToFTOF2()) nMatchingsCrossesFTOF++;
-                if ((this.ECMatcher.distanceIsSmallerThanMin(cross.getMinDistanceEC())) && (cross.isMatchedToFTOF2())) nMatchingsCrossesBoth++;
+                if (cross.isMatchedToFTOF2()) nMatchingsCrossesFTOF2++;
+                if (cross.isMatchedToFTOF1B()) nMatchingsCrossesFTOF1B++;
+
             }
-            
-                       
-            if (nMatchingsCrossesEC >= genParticles.size()) {
-                         
+
+            if (nMatchingsCrossesFTOF1B >= genParticles.size()) {
+
                 h2_ThetaPhiAllTRIGGER.fill(phi, theta);
                 h2_ThetaPhiAllTRIGGER_vsP.get(imom).fill(phi, theta);
-                
-             /*  if (theta>44){
-                    System.out.println(nevent+" "+nMatchingsCrossesEC+" "+crosses.size());
-                }*/
+
+                /*
+                 * if (theta>44){
+                 * System.out.println(nevent+" "+nMatchingsCrossesEC
+                 * +" "+crosses.size()); }
+                 */
 
                 if (q > 0) {
                     h2_ThetaPhiQPTRIGGER.fill(phi, theta);
@@ -377,7 +394,7 @@ public class AnalysisClass {
                     h2_ThetaPhiQMTRIGGER_vsP.get(imom).fill(phi, theta);
                 }
             }
-            if ((nMatchingsCrossesEC + nMatchingsCrossesFTOF) >= genParticles.size()) {
+            if ((nMatchingsCrossesFTOF1B + nMatchingsCrossesFTOF2) >= genParticles.size()) {
                 h2_ThetaPhiAllTRIGGER2.fill(phi, theta);
                 h2_ThetaPhiAllTRIGGER2_vsP.get(imom).fill(phi, theta);
 
@@ -393,15 +410,16 @@ public class AnalysisClass {
             }
 
             idGen++;
-        }/*end loop on genParticles*/
+        }/* end loop on genParticles */
 
     }
 
     /* Inverse analysis */
-    private void doInverseCrossAnalysis(List<MatchedCross> crosses, List<ECCluster> clusters[], List<SimpleTOFHit> hitsFTOF2[]) {
+    private void doInverseCrossAnalysis() {
 
         this.matchToClusters(crosses, clusters);
         this.matchToFTOFHits(3, crosses, hitsFTOF2);
+        this.matchToFTOFHits(2, crosses, hitsFTOF1B);
 
         ArrayList<Double> matchingDistances = new ArrayList<Double>();
 
@@ -482,7 +500,14 @@ public class AnalysisClass {
                 this.minDistanceCSI_FTOF2 = Double.parseDouble(splited[1]);
             } else if (splited[0].contains("minDistanceY_FTOF2")) {
                 this.minDistanceY_FTOF2 = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("minE_FTOF1B")) {
+                this.minE_FTOF1B = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("minDistanceCSI_FTOF1B")) {
+                this.minDistanceCSI_FTOF1B = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("minDistanceY_FTOF1B")) {
+                this.minDistanceY_FTOF1B = Double.parseDouble(splited[1]);
             }
+
         }
 
         br.close();
@@ -514,12 +539,22 @@ public class AnalysisClass {
             hitsFTOF2[ii] = new ArrayList<SimpleTOFHit>();
         }
 
+        hitsFTOF1B = new ArrayList[AnalysisClass.nSectors_CLAS12];
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
+            hitsFTOF1B[ii] = new ArrayList<SimpleTOFHit>();
+        }
+        hitsFTOF1A = new ArrayList[AnalysisClass.nSectors_CLAS12];
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
+            hitsFTOF1A[ii] = new ArrayList<SimpleTOFHit>();
+        }
+
     }
 
     private void setupGeo() {
 
         this.setupGeoEC();
         this.setupGeoFTOF2();
+        this.setupGeoFTOF1B();
 
     }
 
@@ -537,6 +572,15 @@ public class AnalysisClass {
         this.FTOF2Matcher.setupGeo();
         this.FTOF2Matcher.setMinDistanceCSI(this.minDistanceCSI_FTOF2);
         this.FTOF2Matcher.setMinDistanceY(this.minDistanceY_FTOF2);
+
+    }
+
+    private void setupGeoFTOF1B() {
+
+        this.FTOF1BMatcher = new CrossMatcherToFTOFHits(this, 2);
+        this.FTOF1BMatcher.setupGeo();
+        this.FTOF1BMatcher.setMinDistanceCSI(this.minDistanceCSI_FTOF1B);
+        this.FTOF1BMatcher.setMinDistanceY(this.minDistanceY_FTOF1B);
 
     }
 
@@ -603,7 +647,7 @@ public class AnalysisClass {
         allH1F.add(h1_vsDistance2TRIGGER);
         h1_vsDistance3TRIGGER = new H1F("h1_vsDistance3TRIGGER", "h1_vsDistance3TRIGGER", 400, 0., 400.);
         allH1F.add(h1_vsDistance3TRIGGER);
-        
+
         h1_vsDistance1TRIGGER2 = new H1F("h1_vsDistance1TRIGGER2", "h1_vsDistance3TRIGGER2", 400, 0., 400.);
         allH1F.add(h1_vsDistance1TRIGGER2);
         h1_vsDistance2TRIGGER2 = new H1F("h1_vsDistance2TRIGGER2", "h1_vsDistance2TRIGGER2", 400, 0., 400.);
@@ -707,13 +751,23 @@ public class AnalysisClass {
         }
 
         /* MIP: ~ 2 MeV / cm, TOF2 thick=5 cm -> MPI=10 MeV */
-        h2_FTOF2EnergyAll_LR = new H2F("h2_FTOF2EnergyAll_LR", "h2_FTOFEnergyAll_LR", 100, 0, 30, 100, 0, 30);
+        h2_FTOF2EnergyAll_LR = new H2F("h2_FTOF2EnergyAll_LR", "h2_FTOF2EnergyAll_LR", 100, 0, 30, 100, 0, 30);
         allH2F.add(h2_FTOF2EnergyAll_LR);
 
-        h2_FTOF2EnergyMatched_LR = new H2F("h2_FTOF2EnergyMatched_LR", "h2_FTOFEnergyMatched_LR", 100, 0, 30, 100, 0, 30);
+        h2_FTOF2EnergyMatched_LR = new H2F("h2_FTOF2EnergyMatched_LR", "h2_FTOF2EnergyMatched_LR", 100, 0, 30, 100, 0, 30);
         allH2F.add(h2_FTOF2EnergyMatched_LR);
 
-        h2tmp = new H2F("h2tmp", "h2tmp", 100, -500, 500, 100, -500, 500);
+        h2_FTOF1BEnergyAll_LR = new H2F("h2_FTOF1BEnergyAll_LR", "h2_FTOF1BEnergyAll_LR", 100, 0, 30, 100, 0, 30);
+        allH2F.add(h2_FTOF1BEnergyAll_LR);
+
+        h2_FTOF1BEnergyMatched_LR = new H2F("h2_FTOF1BEnergyMatched_LR", "h2_FTOF1BEnergyMatched_LR", 100, 0, 30, 100, 0, 30);
+        allH2F.add(h2_FTOF1BEnergyMatched_LR);
+
+        h2_FTOF1AEnergyAll_LR = new H2F("h2_FTOF1AEnergyAll_LR", "h2_FTOF1AEnergyAll_LR", 100, 0, 30, 100, 0, 30);
+        allH2F.add(h2_FTOF1AEnergyAll_LR);
+
+        h2_FTOF1AEnergyMatched_LR = new H2F("h2_FTOF1AEnergyMatched_LR", "h2_FTOF1AEnergyMatched_LR", 100, 0, 30, 100, 0, 30);
+        allH2F.add(h2_FTOF1AEnergyMatched_LR);
 
     }
 
@@ -745,14 +799,14 @@ public class AnalysisClass {
             h1_vsDistanceQMEFF_vsP.get(ibin).divide(1. * nTracksQM_vsP.get(ibin));
         }
 
-        h2_ThetaPhiAllEFF = H2F.divide(h2_ThetaPhiAllREC, h2_ThetaPhiAllGEN);
-        h2_ThetaPhiQPEFF = H2F.divide(h2_ThetaPhiQPREC, h2_ThetaPhiQPGEN);
-        h2_ThetaPhiQMEFF = H2F.divide(h2_ThetaPhiQMREC, h2_ThetaPhiQMGEN);
+        h2_ThetaPhiAllEFF = H2F.divide(h2_ThetaPhiAllTRIGGER2, h2_ThetaPhiAllREC);
+        h2_ThetaPhiQPEFF = H2F.divide(h2_ThetaPhiQPTRIGGER2, h2_ThetaPhiQPREC);
+        h2_ThetaPhiQMEFF = H2F.divide(h2_ThetaPhiQMTRIGGER2, h2_ThetaPhiQMREC);
 
         for (int ibin = 0; ibin < Parray.size() - 1; ibin++) {
-            h2_ThetaPhiAllEFF_vsP.add(H2F.divide(h2_ThetaPhiAllREC_vsP.get(ibin), h2_ThetaPhiAllGEN_vsP.get(ibin)));
-            h2_ThetaPhiQPEFF_vsP.add(H2F.divide(h2_ThetaPhiQPREC_vsP.get(ibin), h2_ThetaPhiQPGEN_vsP.get(ibin)));
-            h2_ThetaPhiQMEFF_vsP.add(H2F.divide(h2_ThetaPhiQMREC_vsP.get(ibin), h2_ThetaPhiQMGEN_vsP.get(ibin)));
+            h2_ThetaPhiAllEFF_vsP.add(H2F.divide(h2_ThetaPhiAllTRIGGER2_vsP.get(ibin), h2_ThetaPhiAllREC_vsP.get(ibin)));
+            h2_ThetaPhiQPEFF_vsP.add(H2F.divide(h2_ThetaPhiQPTRIGGER2_vsP.get(ibin), h2_ThetaPhiQPREC_vsP.get(ibin)));
+            h2_ThetaPhiQMEFF_vsP.add(H2F.divide(h2_ThetaPhiQMTRIGGER2_vsP.get(ibin), h2_ThetaPhiQMREC_vsP.get(ibin)));
 
         }
 
@@ -845,7 +899,7 @@ public class AnalysisClass {
         h1_vsDistanceQMEFF.setLineColor(3);
         trkAllP.draw(h1_vsDistanceQMEFF, "same");
 
-       trkAllP.cd(5);
+        trkAllP.cd(5);
         trkAllP.draw(h2_ThetaPhiQPGEN, "colz");
 
         trkAllP.cd(6);
@@ -856,11 +910,10 @@ public class AnalysisClass {
 
         trkAllP.cd(8);
         trkAllP.draw(h2_ThetaPhiQPTRIGGER2, "colz");
-        
- 
 
-   /*     trkAllP.cd(9);
-        trkAllP.draw(h2_ThetaPhiQPEFF_withFTOF2, "colz");*/
+        trkAllP.cd(9);
+        trkAllP.getCanvas().getPad(9).getAxisZ().setLog(true);
+        trkAllP.draw(h2_ThetaPhiQPEFF, "colz");
 
         trkAllP.cd(10);
         trkAllP.draw(h2_ThetaPhiQMGEN, "colz");
@@ -874,8 +927,9 @@ public class AnalysisClass {
         trkAllP.cd(13);
         trkAllP.draw(h2_ThetaPhiQMTRIGGER2, "colz");
 
-   /*     trkAllP.cd(14);
-        trkAllP.draw(h2_ThetaPhiQMEFF_withFTOF2, "colz");*/
+        trkAllP.cd(14);
+        trkAllP.getCanvas().getPad(14).getAxisZ().setLog(true);
+        trkAllP.draw(h2_ThetaPhiQMEFF, "colz");
 
         ArrayList<TCanvas> TCanvasArray = new ArrayList<TCanvas>();
         for (int ii = 0; ii < Parray.size() - 1; ii++) {
@@ -901,8 +955,9 @@ public class AnalysisClass {
             TCanvasArray.get(ii).cd(8);
             TCanvasArray.get(ii).draw(h2_ThetaPhiQPTRIGGER2_vsP.get(ii), "colz");
 
-          /*  TCanvasArray.get(ii).cd(9);
-            TCanvasArray.get(ii).draw(h2_ThetaPhiQPEFF_vsP_withFTOF2.get(ii), "colz");*/
+            TCanvasArray.get(ii).cd(9);
+            TCanvasArray.get(ii).getCanvas().getPad(9).getAxisZ().setLog(true);
+            TCanvasArray.get(ii).draw(h2_ThetaPhiQPEFF_vsP.get(ii), "colz");
 
             TCanvasArray.get(ii).cd(10);
             TCanvasArray.get(ii).draw(h2_ThetaPhiQMGEN_vsP.get(ii), "colz");
@@ -916,8 +971,9 @@ public class AnalysisClass {
             TCanvasArray.get(ii).cd(13);
             TCanvasArray.get(ii).draw(h2_ThetaPhiQMTRIGGER2_vsP.get(ii), "colz");
 
-         /*   TCanvasArray.get(ii).cd(14);
-            TCanvasArray.get(ii).draw(h2_ThetaPhiQMEFF_vsP_withFTOF2.get(ii), "colz");*/
+            TCanvasArray.get(ii).cd(14);
+            TCanvasArray.get(ii).getCanvas().getPad(14).getAxisZ().setLog(true);
+            TCanvasArray.get(ii).draw(h2_ThetaPhiQMEFF_vsP.get(ii), "colz");
 
         }
 
@@ -952,7 +1008,6 @@ public class AnalysisClass {
         h1_vsDistance3TRIGGER2.setLineColor(3);
         ceff.draw(h1_vsDistance3TRIGGER2, "same");
 
-
         TCanvas cTOF2 = new TCanvas("cTOF2", 1600, 1600);
         cTOF2.divide(2, 3);
         cTOF2.cd(0);
@@ -977,7 +1032,7 @@ public class AnalysisClass {
         Parray.add(new Double(11.));
 
         for (int ii = 0; ii < Parray.size() - 1; ii++) {
-            nTracks_vsP.add(new Integer(1)); /*to avoid divide-by-0*/
+            nTracks_vsP.add(new Integer(1)); /* to avoid divide-by-0 */
             nTracksQP_vsP.add(new Integer(1));
             nTracksQM_vsP.add(new Integer(1));
         }
@@ -1018,8 +1073,6 @@ public class AnalysisClass {
 
             if (nevent % 10000 == 0) System.out.println("Analyzing " + nevent + " events" + " " + nmultitrk);
 
-      
-
             /* Get generated (MC) particles */
             DataBank genParticlesDB = event.getBank("MC::Particle");
             if (genParticlesDB == null) continue;
@@ -1028,14 +1081,14 @@ public class AnalysisClass {
             /* Make tracks and crosses */
             DataBank tracksData = event.getBank("HitBasedTrkg::HBTracks");
             DataBank crossesData = event.getBank("HitBasedTrkg::HBCrosses");
-            //DataBank tracksData = event.getBank("TimeBasedTrkg::TBTracks");
+            // DataBank tracksData = event.getBank("TimeBasedTrkg::TBTracks");
             // DataBank crossesData = event.getBank("TimeBasedTrkg::TBCrosses");
             if (tracksData == null) continue;
             if (crossesData == null) continue;
-            
+
             tracks.clear();
             crosses.clear();
-            
+
             dataReader.makeTriggerTracks(tracksData, crossesData, tracks, crosses);
 
             /*
@@ -1059,32 +1112,33 @@ public class AnalysisClass {
              */
             DataBank hitsFTOF = event.getBank("FTOF::rawhits");
             if (hitsFTOF == null) continue;
-            int nHits = dataReader.readFTOFHits(hitsFTOF, hitsFTOF2);
+            int nHitsFTOF2 = dataReader.readFTOFHits(hitsFTOF, hitsFTOF2, hitsFTOF1B, hitsFTOF1A);
 
             /* Perform matchings */
             /* Crosses */
             this.matchToClusters(crosses, clusters);
             this.matchToFTOFHits(3, crosses, hitsFTOF2);
+            this.matchToFTOFHits(2, crosses, hitsFTOF1B);
 
             /* Tracks */
             this.matchToClusters(tracks, clusters);
             this.matchToFTOFHits(3, tracks, hitsFTOF2);
-
+            this.matchToFTOFHits(2, tracks, hitsFTOF1B);
             /*
              * First, do a "direct" analysis - meaningfull if there's exactly
              * ONE generated particle
              */
 
-           // if (nGenParticles == 1) {
-                this.doDirectAnalysis();
-           // }
+            // if (nGenParticles == 1) {
+            this.doDirectAnalysis();
+            // }
             /*
              * Then, do an "inverse" analysis - basically what the trigger does:
              * take all R3 crosses - doesn't matter if matched to a track or
              * not, match them with ECAL.
              */
 
-            this.doInverseCrossAnalysis(crosses, clusters, hitsFTOF2);
+            this.doInverseCrossAnalysis();
 
         } /* End loop on events */
 

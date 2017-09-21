@@ -8,38 +8,50 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 
-
 public class DataReaderAndMatcher {
 
     private AnalysisClass analysisClass;
-    
-    private double minClusterE_ECAL=0.01; //GeV
-    private double minE_FTOF2=0.02; //MeV
-    
-    public DataReaderAndMatcher(AnalysisClass ana){
+
+    private double minClusterE_ECAL = 0.01; // GeV
+    private double minE_FTOF2 = 0.02; // MeV
+    private double minE_FTOF1B = 0.02; // MeV
+    private double minE_FTOF1A = 0.02; // MeV
+
+    public DataReaderAndMatcher(AnalysisClass ana) {
         analysisClass = ana;
     }
-    
-    
+
     public double getMinClusterE_ECAL() {
         return minClusterE_ECAL;
     }
-
 
     public void setMinClusterE_ECAL(double minClusterE_ECAL) {
         this.minClusterE_ECAL = minClusterE_ECAL;
     }
 
+    public double getMinE_FTOF1A() {
+        return minE_FTOF1B;
+    }
+
+    public void setMinE_FTOF1A(double minE_FTOF1A) {
+        this.minE_FTOF1A = minE_FTOF1A;
+    }
+
+    public double getMinE_FTOF1B() {
+        return minE_FTOF1B;
+    }
+
+    public void setMinE_FTOF1B(double minE_FTOF1B) {
+        this.minE_FTOF1B = minE_FTOF1B;
+    }
 
     public double getMinE_FTOF2() {
         return minE_FTOF2;
     }
 
-
     public void setMinE_FTOF2(double minE_FTOF2) {
         this.minE_FTOF2 = minE_FTOF2;
     }
-
 
     public int makeGeneratedParticles(DataBank genParticlesDB, List<Particle> genParticles) {
         int nGenParticles = 0;
@@ -58,10 +70,10 @@ public class DataReaderAndMatcher {
         int nClusters = clustersDataBank.rows();
         int nClustersDet = 0;
 
-        for (int ii=0;ii<AnalysisClass.nSectors_CLAS12;ii++){
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             clusters[ii].clear();
         }
-        
+
         for (int loop = 0; loop < nClusters; loop++) {
             int layer = clustersDataBank.getByte("layer", loop);
             if (layer / 3 != detId) continue; // 0: PCAL, 1:EC-IN, 2:EC-OUT
@@ -77,7 +89,7 @@ public class DataReaderAndMatcher {
             double energy = clustersDataBank.getFloat("energy", loop);
             double time = clustersDataBank.getFloat("time", loop);
 
-            analysisClass.getHistogram1D("h1_allClustersE_"+sector).fill(energy);
+            analysisClass.getHistogram1D("h1_allClustersE_" + sector).fill(energy);
 
             if (energy < this.minClusterE_ECAL) continue; /*
                                                            * just consider
@@ -85,7 +97,6 @@ public class DataReaderAndMatcher {
                                                            * thr
                                                            */
 
-           
             /* Following lines are used to rotate the point to the sector system */
             Point3D p0 = new Point3D(x, y, z);
             p0.rotateZ(-(Math.toRadians((sector - 1) * AnalysisClass.phiAngle_CLAS12)));
@@ -104,16 +115,17 @@ public class DataReaderAndMatcher {
 
         return nClustersDet;
     }
-    
-    
-    public int readFTOFHits(DataBank hitsFTOFDataBank, List<SimpleTOFHit>[] hitsFTOF2) {
+
+    public int readFTOFHits(DataBank hitsFTOFDataBank, List<SimpleTOFHit>[] hitsFTOF2, List<SimpleTOFHit>[] hitsFTOF1B, List<SimpleTOFHit>[] hitsFTOF1A) {
 
         int nFTOFHits = hitsFTOFDataBank.rows();
 
-        for (int ii=0;ii<AnalysisClass.nSectors_CLAS12;ii++){
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsFTOF2[ii].clear();
+            hitsFTOF1B[ii].clear();
+            hitsFTOF1A[ii].clear();
         }
-        
+
         for (int loop = 0; loop < nFTOFHits; loop++) {
             int sector = hitsFTOFDataBank.getByte("sector", loop);
             int layer = hitsFTOFDataBank.getByte("layer", loop);
@@ -130,14 +142,23 @@ public class DataReaderAndMatcher {
 
             switch (layer) {
             case 1:
+                if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A)) {
+                    hitsFTOF1A[sector - 1].add(hit);
+                    analysisClass.getHistogram2D("h2_FTOF1AEnergyAll_LR").fill(energyL, energyR);
+                }
+                break;
             case 2:
+                if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B)) {
+                    hitsFTOF1B[sector - 1].add(hit);
+                    analysisClass.getHistogram2D("h2_FTOF1BEnergyAll_LR").fill(energyL, energyR);
+                }
                 break;
             case 3: // panel2
                 if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2)) {
                     hitsFTOF2[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF2EnergyAll_LR").fill(energyL, energyR);
-                    break;
                 }
+                break;
             }
         }
         return nFTOFHits;
@@ -152,8 +173,6 @@ public class DataReaderAndMatcher {
         int nTracks = tracksHBDataBank.rows();
         int nCrosses = crossesHBDataBank.rows();
 
-      
-        
         for (int itrack = 0; itrack < nTracks; itrack++) {
             int sector = tracksHBDataBank.getByte("sector", itrack);
             int crossID3 = tracksHBDataBank.getShort("Cross3_ID", itrack);
@@ -185,7 +204,7 @@ public class DataReaderAndMatcher {
             }
             if (crossID == -1) {
                 System.out.println("Error with cross indexing: " + crossID3 + " " + crossID);
-                continue; //ignore this cross
+                continue; // ignore this cross
             }
 
             double x0 = crossesHBDataBank.getFloat("x", crossID);
@@ -240,7 +259,7 @@ public class DataReaderAndMatcher {
                                                                    */
 
             /* Add it to the list of crosses - TriggerTrack extends Cross */
-            crosses.add(track);          
+            crosses.add(track);
         }
         /* Now make all the other R3 crosses */
 
@@ -303,11 +322,10 @@ public class DataReaderAndMatcher {
             cross.set_Id(0);
 
             /* Add elements to the lists */
-            crosses.add(cross);      
+            crosses.add(cross);
         }
     }
-    
-    
+
     /*
      * This method takes as input the MC bank - with the generated particles -
      * and the reconstructed tracks. For each generated particle, it tries to
@@ -348,28 +366,26 @@ public class DataReaderAndMatcher {
                 // if (recParticle.get_Sector()!=sector) continue; //A.C.,
                 // sector is computed from gen. momentum, and does not consider
                 // sol. field
-                
-                /*CLAS12 DC specifics are
-                 * deltaP/P < 1%
-                 * deltaTheta < 1 mrad -> 0.057 deg
-                 * deltaPhi < 1 mrad / sinTheta
+
+                /*
+                 * CLAS12 DC specifics are deltaP/P < 1% deltaTheta < 1 mrad ->
+                 * 0.057 deg deltaPhi < 1 mrad / sinTheta
                  * 
                  * -> I take much bigger values
                  */
-                
 
                 if (recParticle.getCharge() != charge) continue;
                 /* Very basic cuts over momentum and theta */
-                if (Math.abs(recParticle.getMomentum().mag() - P)/P > 0.3) continue;
+                if (Math.abs(recParticle.getMomentum().mag() - P) / P > 0.3) continue;
                 if (Math.abs(recParticle.getMomentum().theta() - theta) > Math.toRadians(10.)) continue;
                 if (Math.abs(recParticle.getMomentum().phi() - phi) > Math.toRadians(40.)) continue;
 
-                recParticle.setGenParticle(iGen,genParticle);
+                recParticle.setGenParticle(iGen, genParticle);
                 nMatched++;
                 break; // if we arrive here - it means the matching was found.
                        // No reason to move forward in the loop of reconstructed
             }
-            
+
             iGen++;
         }
 

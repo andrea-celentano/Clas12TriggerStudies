@@ -13,6 +13,14 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
 
     private int layerFTOF;
 
+    /* Panel 1A FTOF - this is the back one */
+
+    /* Panel 1B FTOF - this is the front one */
+    private static double thetaAnglePlaneFTOF1B = 25;
+    private static double thetaAngleMINFTOF1B = 3.667;
+    private static double R2FTOF1B = 717.236;
+    private static double counterWidthFTOF1B = 6;
+
     /* Panel 2 FTOT */
     private static double thetaAnglePlaneFTOF2 = 58.11;
     private static double thetaAngleMINFTOF2 = 34.698;
@@ -58,8 +66,11 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
         double L = 0;
         switch (this.layerFTOF) {
         case 1:
+            if (barID<=5) L = 15.85 * barID + 16.43;
+            else L = 15.85 * barID +11.45;
+            break;
         case 2:
-            System.out.println("not yet implemented");
+            L = 6.40 * barID + 10.84;
             break;
         case 3:
             L = 13.73 * barID + 357.77;
@@ -71,11 +82,16 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
     public void setupGeo() {
 
         switch (this.layerFTOF) {
-        case 1:
-        case 2:
+        case 1: /* Panel 1a-rear */
             System.out.println("not yet implemented");
             break;
-        case 3:
+        case 2: /* Panel 1b- front */
+            thetaAnglePlaneFTOF = CrossMatcherToFTOFHits.thetaAnglePlaneFTOF1B;
+            thetaAngleMINFTOF = CrossMatcherToFTOFHits.thetaAngleMINFTOF1B;
+            R2FTOF = CrossMatcherToFTOFHits.R2FTOF1B;
+            counterWidthFTOF = CrossMatcherToFTOFHits.counterWidthFTOF1B;
+            break;
+        case 3: /* Panel2 */
 
             /*
              * See my notes on 14/9/2017. Extracted from D. Carman description
@@ -85,6 +101,7 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
             thetaAngleMINFTOF = CrossMatcherToFTOFHits.thetaAngleMINFTOF2;
             R2FTOF = CrossMatcherToFTOFHits.R2FTOF2;
             counterWidthFTOF = CrossMatcherToFTOFHits.counterWidthFTOF2;
+            break;
         }
 
         l0FTOF = this.R2FTOF * Math.cos(Math.toRadians(this.thetaAnglePlaneFTOF - this.thetaAngleMINFTOF));
@@ -121,13 +138,24 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
         /* Determine the intersection between this line and the FTOF-plane */
         Point3D intersectCross = new Point3D();
         if ((planeFTOF.intersectionRay(rayCross, intersectCross) != 1)) {
-            System.out.println("The given cross does not intersect TOF plane? event: " + analysisClass.nevent+" sector: "+cross.get_Sector()+" "+pCross.toString() + " " + vCross.toString());
+            System.out.println("The given cross does not intersect TOF plane? event: " + analysisClass.nevent + " sector: " + cross.get_Sector() + " " + pCross.toString() + " " + vCross.toString());
             return false;
         }
 
         for (SimpleTOFHit hit : hits) {
             if (matchCrossToFTOFHit(intersectCross, hit)) {
-                analysisClass.getHistogram2D("h2_FTOF2EnergyMatched_LR").fill(hit.get_EnergyL(), hit.get_EnergyR());            
+                switch (layerFTOF){
+                case 1:
+                    break;
+                case 2:
+                    analysisClass.getHistogram2D("h2_FTOF1BEnergyMatched_LR").fill(hit.get_EnergyL(), hit.get_EnergyR());
+                    break;
+                case 3:
+                    analysisClass.getHistogram2D("h2_FTOF2EnergyMatched_LR").fill(hit.get_EnergyL(), hit.get_EnergyR());
+                    break;
+                }
+                
+               
                 ret = true;
             }
         }

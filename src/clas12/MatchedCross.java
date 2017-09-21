@@ -13,12 +13,21 @@ public class MatchedCross extends Cross {
     private static final long serialVersionUID = 1L;
     
     private Boolean isMatchedToFTOF2=false;
+    private Boolean isMatchedToFTOF1B=false;
     private double minDistanceEC=-1;
     
     public MatchedCross(int sector) {
         super(sector,3,0);
     }
     
+    public Boolean isMatchedToFTOF1B() {
+        return isMatchedToFTOF1B;
+    }
+
+    public void setIsMatchedToFTOF1B(Boolean isMatchedToFTOF1B) {
+        this.isMatchedToFTOF1B = isMatchedToFTOF1B;
+    }
+
     public Boolean isMatchedToFTOF2() {
         return isMatchedToFTOF2;
     }
