@@ -292,8 +292,11 @@ public class AnalysisClass {
         int nMatchingsCrossesEC = 0;
         int nMatchingsCrossesFTOF2 = 0;
         int nMatchingsCrossesFTOF1B = 0;
-
+        
+        int nCoincFTOF1 = 0;
         Integer tmpI;
+        
+      
 
         for (Particle particle : genParticles) {
 
