@@ -65,10 +65,16 @@ public class AnalysisClass {
     /* TOF */
     private double minE_FTOF2 = 0.1;
     private double minE_FTOF1B = 0.1;
+    private double minE_FTOF1A = 0.1;
     List<SimpleTOFHit>[] hitsFTOF2;
     List<SimpleTOFHit>[] hitsFTOF1B;
     List<SimpleTOFHit>[] hitsFTOF1A;
 
+    /* TOF "time history matching */
+    double Tmin=100;
+    double Tcoinc=100;
+    HitsMatcherFTOF1 hitsMatcherFTOF1[];
+    boolean          matchFTOF1result[];
     /* Matching DC-ECAL */
     CrossMatcherToECClusters ECMatcher;
     private double minDistance_ECAL = 50.;
@@ -82,6 +88,11 @@ public class AnalysisClass {
     CrossMatcherToFTOFHits FTOF1BMatcher;
     private double minDistanceCSI_FTOF1B = 5.;
     private double minDistanceY_FTOF1B = 10.;
+
+    /* Matching DC-FTOF1A */
+    CrossMatcherToFTOFHits FTOF1AMatcher;
+    private double minDistanceCSI_FTOF1A = 5.;
+    private double minDistanceY_FTOF1A = 10.;
 
     /* Momentum array */
     ArrayList<Double> Parray; // Index of lower-bound momenta (a part from
@@ -379,12 +390,6 @@ public class AnalysisClass {
                 h2_ThetaPhiAllTRIGGER.fill(phi, theta);
                 h2_ThetaPhiAllTRIGGER_vsP.get(imom).fill(phi, theta);
 
-                /*
-                 * if (theta>44){
-                 * System.out.println(nevent+" "+nMatchingsCrossesEC
-                 * +" "+crosses.size()); }
-                 */
-
                 if (q > 0) {
                     h2_ThetaPhiQPTRIGGER.fill(phi, theta);
                     h2_ThetaPhiQPTRIGGER_vsP.get(imom).fill(phi, theta);
@@ -463,6 +468,10 @@ public class AnalysisClass {
             if ((nMatchingsEC + nMatchingsFTOF2) >= 1) h1_vsDistance1TRIGGER2.incrementBinContent(ibin);
             if ((nMatchingsEC + nMatchingsFTOF2) >= 2) h1_vsDistance2TRIGGER2.incrementBinContent(ibin);
             if ((nMatchingsEC + nMatchingsFTOF2) >= 3) h1_vsDistance3TRIGGER2.incrementBinContent(ibin);
+
+            if ((nMatchingsEC + nMatchingsFTOF2) >= 3) {
+                System.out.println(nevent);
+            }
         }
     }
 
@@ -506,7 +515,17 @@ public class AnalysisClass {
                 this.minDistanceCSI_FTOF1B = Double.parseDouble(splited[1]);
             } else if (splited[0].contains("minDistanceY_FTOF1B")) {
                 this.minDistanceY_FTOF1B = Double.parseDouble(splited[1]);
-            }
+            } else if (splited[0].contains("minE_FTOF1A")) {
+                this.minE_FTOF1A = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("minDistanceCSI_FTOF1A")) {
+                this.minDistanceCSI_FTOF1A = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("minDistanceY_FTOF1A")) {
+                this.minDistanceY_FTOF1A = Double.parseDouble(splited[1]);
+            }else if (splited[0].contains("Tmin")) {
+                this.Tmin = Double.parseDouble(splited[1]);
+            } else if (splited[0].contains("Tcoinc")) {
+                this.Tcoinc = Double.parseDouble(splited[1]);
+            } 
 
         }
 
@@ -514,14 +533,16 @@ public class AnalysisClass {
         this.setupMomentum();
         this.setupHistograms();
         this.setupGeo();
-        this.setupDataReader();
+        this.setupDataReaderAndMatcher();
 
     }
 
-    private void setupDataReader() {
+    private void setupDataReaderAndMatcher() {
         dataReader = new DataReaderAndMatcher(this);
         dataReader.setMinClusterE_ECAL(minClusterE_ECAL);
         dataReader.setMinE_FTOF2(minE_FTOF2);
+        dataReader.setMinE_FTOF1B(minE_FTOF1B);
+        dataReader.setMinE_FTOF1A(minE_FTOF1A);
 
         /* Also setup here what needed to read data */
         genParticles = new ArrayList<Particle>();
@@ -546,6 +567,11 @@ public class AnalysisClass {
         hitsFTOF1A = new ArrayList[AnalysisClass.nSectors_CLAS12];
         for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsFTOF1A[ii] = new ArrayList<SimpleTOFHit>();
+        }
+        hitsMatcherFTOF1=new HitsMatcherFTOF1[AnalysisClass.nSectors_CLAS12];
+        matchFTOF1result=new boolean[AnalysisClass.nSectors_CLAS12];
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
+            hitsMatcherFTOF1[ii]=new HitsMatcherFTOF1(this, ii, Tcoinc, Tmin);
         }
 
     }
@@ -584,6 +610,15 @@ public class AnalysisClass {
 
     }
 
+    private void setupGeoFTOF1A() {
+
+        this.FTOF1AMatcher = new CrossMatcherToFTOFHits(this, 1);
+        this.FTOF1AMatcher.setupGeo();
+        this.FTOF1AMatcher.setMinDistanceCSI(this.minDistanceCSI_FTOF1A);
+        this.FTOF1AMatcher.setMinDistanceY(this.minDistanceY_FTOF1A);
+
+    }
+
     private void setupHistograms() {
 
         this.allH1F = new ArrayList<H1F>();
@@ -602,7 +637,7 @@ public class AnalysisClass {
         }
 
         h1_closerClustersE = new ArrayList<H1F>();
-        for (int isector = 1; isector <= 6; isector++) {
+        for (int isector = 1; isector <= AnalysisClass.nSectors_CLAS12; isector++) {
             h1_closerClustersE.add(new H1F("h1_closerClustersE_" + isector, "h1_closerClustersE_" + isector + ";Energy (GeV)", 100, 0, .3));
             allH1F.add(h1_closerClustersE.get(isector - 1));
         }
@@ -1124,6 +1159,15 @@ public class AnalysisClass {
             this.matchToClusters(tracks, clusters);
             this.matchToFTOFHits(3, tracks, hitsFTOF2);
             this.matchToFTOFHits(2, tracks, hitsFTOF1B);
+            
+            
+            /*Here do the "time-window analysis"
+             * 
+             */
+            for (int ii=0;ii<AnalysisClass.nSectors_CLAS12;ii++){
+                /*1A-1B coinc.*/
+                this.matchFTOF1result[ii]=this.hitsMatcherFTOF1[ii].MatchHits(hitsFTOF1A[ii], hitsFTOF1B[ii]);             
+            }
             /*
              * First, do a "direct" analysis - meaningfull if there's exactly
              * ONE generated particle

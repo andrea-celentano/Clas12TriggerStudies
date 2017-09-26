@@ -136,25 +136,28 @@ public class DataReaderAndMatcher {
             float timeL = hitsFTOFDataBank.getFloat("time_left", loop);
             float timeR = hitsFTOFDataBank.getFloat("time_right", loop);
 
-            SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
-
-            // System.out.println(sector+" "+layer+" "+component+" "+energyL+" "+energyR+" "+timeL+" "+timeR);
-
+            /* Should I put here also the L/R time coincidence? */
             switch (layer) {
             case 1:
-                if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A)) {
+                if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A) && (timeL > 0) && (timeR > 0)) {
+
+                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
                     hitsFTOF1A[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF1AEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 2:
-                if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B)) {
+                if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B) && (timeL > 0) && (timeR > 0)) {
+
+                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
                     hitsFTOF1B[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF1BEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 3: // panel2
-                if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2)) {
+                if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2) && (timeL > 0) && (timeR > 0)) {
+
+                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
                     hitsFTOF2[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF2EnergyAll_LR").fill(energyL, energyR);
                 }

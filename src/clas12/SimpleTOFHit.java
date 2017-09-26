@@ -12,11 +12,9 @@ public class SimpleTOFHit {
     private float _EnergyR;
     private float _TimeL;
     private float _TimeR;
+    private float _TimeAVG;
     
-    
-    
-    
-    
+        
     public SimpleTOFHit( int _Sector,int _Panel, int _Paddle,int _Id,float _EnergyL, float _EnergyR, float _TimeL, float _TimeR) {
         super();
         this._Panel = _Panel;
@@ -25,7 +23,8 @@ public class SimpleTOFHit {
         this._EnergyL = _EnergyL;
         this._EnergyR = _EnergyR;
         this._TimeL = _TimeL;
-        this._TimeR = _TimeR;
+        this._TimeR = _TimeR;        
+        this._TimeAVG = (this._TimeL+this._TimeR)/2;
     }
     
     public int get_Panel() {
@@ -77,6 +76,14 @@ public class SimpleTOFHit {
     }
     public void set_TimeR(float _TimeR) {
         this._TimeR = _TimeR;
+    }
+
+    public float get_TimeAVG() {
+        return _TimeAVG;
+    }
+
+    public void set_TimeAVG(float _TimeAVG) {
+        this._TimeAVG = _TimeAVG;
     }
     
     
