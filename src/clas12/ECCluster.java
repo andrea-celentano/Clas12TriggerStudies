@@ -4,7 +4,7 @@ import org.jlab.geom.prim.Point3D;
 
 
 
-public class ECCluster {
+public class ECCluster implements HitWithPositionEnergyTime {
 
 	public int sector, layer;
 	public double energy, time;
@@ -17,5 +17,17 @@ public class ECCluster {
 	public double getEnergy() {
 		return energy;
 	}
+
+    @Override
+    public Point3D getPosition() {
+        // TODO Auto-generated method stub
+        return p0;
+    }
+
+    @Override
+    public double getTime() {
+        // TODO Auto-generated method stub
+        return time;
+    }
 
 }

@@ -1,9 +1,10 @@
 package clas12;
 import org.jlab.rec.dc.cross.Cross;
 
-/* Also add info regarding the matching:
+/* Add info regarding the matching:
  * --> with calorimeter - in terms of the minimum distance to a good cluster (-1 if not matched)
  * --> with FTOF2 (y/n)
+ * --> with FTOF1B (y/n)
 */
 
 public class MatchedCross extends Cross {

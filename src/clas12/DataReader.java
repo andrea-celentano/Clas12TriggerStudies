@@ -8,16 +8,16 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.io.base.DataBank;
 
-public class DataReaderAndMatcher {
+public class DataReader {
 
     private AnalysisClass analysisClass;
 
     private double minClusterE_ECAL = 0.01; // GeV
-    private double minE_FTOF2 = 0.02; // MeV
-    private double minE_FTOF1B = 0.02; // MeV
-    private double minE_FTOF1A = 0.02; // MeV
+    private double minE_FTOF2 = 0.2; // MeV
+    private double minE_FTOF1B = 0.2; // MeV
+    private double minE_FTOF1A = 0.2; // MeV
 
-    public DataReaderAndMatcher(AnalysisClass ana) {
+    public DataReader(AnalysisClass ana) {
         analysisClass = ana;
     }
 
@@ -116,9 +116,14 @@ public class DataReaderAndMatcher {
         return nClustersDet;
     }
 
-    public int readFTOFHits(DataBank hitsFTOFDataBank, List<SimpleTOFHit>[] hitsFTOF2, List<SimpleTOFHit>[] hitsFTOF1B, List<SimpleTOFHit>[] hitsFTOF1A) {
+    public int makeFTOFHits(DataBank hitsRawFTOFDataBank, DataBank hitsReconFTOFDataBank, List<ReconTOFHit>[] hitsFTOF2, List<ReconTOFHit>[] hitsFTOF1B, List<ReconTOFHit>[] hitsFTOF1A) {
 
-        int nFTOFHits = hitsFTOFDataBank.rows();
+        int nRawFTOFHits = hitsRawFTOFDataBank.rows();
+        int nReconFTOFHits = hitsReconFTOFDataBank.rows();
+
+        if (nRawFTOFHits != nReconFTOFHits) {
+            System.out.println("Warning! This event: " + analysisClass.nevent + "has different number of TOF hits Raw/Recon: " + nRawFTOFHits + " " + nReconFTOFHits);
+        }
 
         for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsFTOF2[ii].clear();
@@ -126,52 +131,65 @@ public class DataReaderAndMatcher {
             hitsFTOF1A[ii].clear();
         }
 
-        for (int loop = 0; loop < nFTOFHits; loop++) {
-            int sector = hitsFTOFDataBank.getByte("sector", loop);
-            int layer = hitsFTOFDataBank.getByte("layer", loop);
-            int component = hitsFTOFDataBank.getShort("component", loop);
-            short id = hitsFTOFDataBank.getShort("id", loop);
-            float energyL = hitsFTOFDataBank.getFloat("energy_left", loop);
-            float energyR = hitsFTOFDataBank.getFloat("energy_right", loop);
-            float timeL = hitsFTOFDataBank.getFloat("time_left", loop);
-            float timeR = hitsFTOFDataBank.getFloat("time_right", loop);
+        for (int loop = 0; loop < nRawFTOFHits; loop++) {
+            int sector = hitsReconFTOFDataBank.getByte("sector", loop);
+            int layer = hitsReconFTOFDataBank.getByte("layer", loop);
+            int component = hitsReconFTOFDataBank.getShort("component", loop);
+            short id = hitsReconFTOFDataBank.getShort("id", loop);
+
+            float energy = hitsReconFTOFDataBank.getFloat("energy", loop);
+            float time = hitsReconFTOFDataBank.getFloat("time", loop);
+
+            float x = hitsReconFTOFDataBank.getFloat("x", loop);
+            float y = hitsReconFTOFDataBank.getFloat("y", loop);
+            float z = hitsReconFTOFDataBank.getFloat("z", loop);
+            
+            /* Following lines are used to rotate the point to the sector system */
+            Point3D p0 = new Point3D(x, y, z);
+            p0.rotateZ(-(Math.toRadians((sector - 1) * AnalysisClass.phiAngle_CLAS12)));
+
+            float energyL = hitsRawFTOFDataBank.getFloat("energy_left", loop);
+            float energyR = hitsRawFTOFDataBank.getFloat("energy_right", loop);
+            float timeL = hitsRawFTOFDataBank.getFloat("time_left", loop);
+            float timeR = hitsRawFTOFDataBank.getFloat("time_right", loop);
 
             /* Should I put here also the L/R time coincidence? */
             switch (layer) {
             case 1:
                 if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A) && (timeL > 0) && (timeR > 0)) {
 
-                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
+                    ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
+                    hit.setP0(p0);
                     hitsFTOF1A[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF1AEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 2:
                 if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B) && (timeL > 0) && (timeR > 0)) {
-
-                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
+                    ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
+                    hit.setP0(p0);
                     hitsFTOF1B[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF1BEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 3: // panel2
                 if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2) && (timeL > 0) && (timeR > 0)) {
-
-                    SimpleTOFHit hit = new SimpleTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR);
+                    ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
+                    hit.setP0(p0);
                     hitsFTOF2[sector - 1].add(hit);
                     analysisClass.getHistogram2D("h2_FTOF2EnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             }
         }
-        return nFTOFHits;
+        return nReconFTOFHits;
     }
 
     /*
      * Make trigger tracks and all-R3 tracks, in SECTOR reference frame
      * (momentum of the track is in CLAS frame!)
      */
-    public void makeTriggerTracks(DataBank tracksHBDataBank, DataBank crossesHBDataBank, List<TrackMatchedToGen> tracks, List<MatchedCross> crosses) {
+    public void makeDCCrossesAndTracks(DataBank tracksHBDataBank, DataBank crossesHBDataBank, List<TrackMatchedToGen> tracks, List<MatchedCross> crosses) {
         /* First, make all tracks */
         int nTracks = tracksHBDataBank.rows();
         int nCrosses = crossesHBDataBank.rows();
@@ -227,7 +245,6 @@ public class DataReaderAndMatcher {
             double euz = crossesHBDataBank.getFloat("err_uz", crossID);
 
             /* Translate point from tilted to sector coordinates */
-            /* For direction vector, simply imagine it defines a second point. */
             Vector3D u = new Vector3D(ux, uy, uz);
             Point3D p0 = new Point3D(x0, y0, z0);
             Vector3D eu = new Vector3D(eux, euy, euz);
@@ -240,7 +257,7 @@ public class DataReaderAndMatcher {
             eu.rotateY(Math.toRadians(AnalysisClass.thetaAngleDC_CLAS12));
 
             /*
-             * These lines are commented because I work in the SECTOR system
+             * Uncomment following lines to go to CLAS12 system
              * p0.rotateZ(Math.toRadians((sector - 1) * phiAngle));
              * p1.rotateZ(Math.toRadians((sector - 1) * phiAngle));
              */
@@ -326,6 +343,16 @@ public class DataReaderAndMatcher {
 
             /* Add elements to the lists */
             crosses.add(cross);
+        }
+    }
+
+    public void makeDCSegments(DataBank segmentsDCDataBank, List<SimpleDCSegment> segments) {
+        int nSegments = segmentsDCDataBank.rows();
+
+        for (int isegment = 0; isegment < nSegments; isegment++) {
+            int sector = segmentsDCDataBank.getByte("sector", isegment);
+            int superlayer = segmentsDCDataBank.getByte("superlayer", isegment);
+            segments.add(new SimpleDCSegment(sector, superlayer));
         }
     }
 

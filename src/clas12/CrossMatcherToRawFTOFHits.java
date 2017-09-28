@@ -9,7 +9,7 @@ import org.jlab.geom.prim.Point3D;
 import org.jlab.geom.prim.Vector3D;
 import org.jlab.rec.dc.cross.Cross;
 
-public class CrossMatcherToFTOFHits extends CrossMatcher {
+public class CrossMatcherToRawFTOFHits extends CrossMatcher {
 
     private int layerFTOF;
 
@@ -40,7 +40,7 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
     /* distances min values */
     private double minDistanceCSI, minDistanceY;
 
-    public CrossMatcherToFTOFHits(AnalysisClass ana, int layer) {
+    public CrossMatcherToRawFTOFHits(AnalysisClass ana, int layer) {
         super(ana);
         layerFTOF = layer;
     }
@@ -86,10 +86,10 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
             System.out.println("not yet implemented");
             break;
         case 2: /* Panel 1b- front */
-            thetaAnglePlaneFTOF = CrossMatcherToFTOFHits.thetaAnglePlaneFTOF1B;
-            thetaAngleMINFTOF = CrossMatcherToFTOFHits.thetaAngleMINFTOF1B;
-            R2FTOF = CrossMatcherToFTOFHits.R2FTOF1B;
-            counterWidthFTOF = CrossMatcherToFTOFHits.counterWidthFTOF1B;
+            thetaAnglePlaneFTOF = CrossMatcherToRawFTOFHits.thetaAnglePlaneFTOF1B;
+            thetaAngleMINFTOF = CrossMatcherToRawFTOFHits.thetaAngleMINFTOF1B;
+            R2FTOF = CrossMatcherToRawFTOFHits.R2FTOF1B;
+            counterWidthFTOF = CrossMatcherToRawFTOFHits.counterWidthFTOF1B;
             break;
         case 3: /* Panel2 */
 
@@ -97,10 +97,10 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
              * See my notes on 14/9/2017. Extracted from D. Carman description
              * of CLAS12 FTOF
              */
-            thetaAnglePlaneFTOF = CrossMatcherToFTOFHits.thetaAnglePlaneFTOF2;
-            thetaAngleMINFTOF = CrossMatcherToFTOFHits.thetaAngleMINFTOF2;
-            R2FTOF = CrossMatcherToFTOFHits.R2FTOF2;
-            counterWidthFTOF = CrossMatcherToFTOFHits.counterWidthFTOF2;
+            thetaAnglePlaneFTOF = CrossMatcherToRawFTOFHits.thetaAnglePlaneFTOF2;
+            thetaAngleMINFTOF = CrossMatcherToRawFTOFHits.thetaAngleMINFTOF2;
+            R2FTOF = CrossMatcherToRawFTOFHits.R2FTOF2;
+            counterWidthFTOF = CrossMatcherToRawFTOFHits.counterWidthFTOF2;
             break;
         }
 
@@ -119,7 +119,7 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
      * is basically contained in the "paddle" identifier. Return -1 if no hits
      * are present
      */
-    public boolean matchCrossToFTOFHits(Cross cross, List<SimpleTOFHit> hits) {
+    public boolean matchCrossToFTOFHits(Cross cross, List<ReconTOFHit> hits) {
 
         boolean ret = false;
         if (hits.size() == 0) return false;
@@ -142,7 +142,7 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
             return false;
         }
 
-        for (SimpleTOFHit hit : hits) {
+        for (RawTOFHit hit : hits) {
             if (matchCrossToFTOFHit(intersectCross, hit)) {
                 switch (layerFTOF){
                 case 1:
@@ -167,7 +167,7 @@ public class CrossMatcherToFTOFHits extends CrossMatcher {
      * This is doing the merge between the Cross projected on the TOF plane and
      * the TOF hit
      */
-    public boolean matchCrossToFTOFHit(Point3D crossProj, SimpleTOFHit hit) {
+    public boolean matchCrossToFTOFHit(Point3D crossProj, RawTOFHit hit) {
         /*
          * Get the cross coordinates in the TOF-plane system (see 14/9/2017
          * notes)
