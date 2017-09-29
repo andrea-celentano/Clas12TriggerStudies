@@ -683,9 +683,11 @@ public class AnalysisClass {
     }
 
     public void setupHistograms() {
+        System.out.println("Going to setup histograms");
         guiClass = new GuiClass(this);
         guiClass.setParray(Parray);
         guiClass.setupHistograms();
+        System.out.println("Setup histograms done");
     }
 
     public void setupMomentum() {

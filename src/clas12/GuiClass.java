@@ -171,20 +171,20 @@ public class GuiClass {
         h2_ThetaPhiQPGEN = new H2F("h2_ThetaPhiQPGEN", "h2_ThetaPhiQPGEN", 100, -180., 180., 100, 0, 60.);
         allH2F.add(h2_ThetaPhiQPGEN);
         h2_ThetaPhiQPREC = new H2F("h2_ThetaPhiQPREC", "h2_ThetaPhiQPREC", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQPGEN);
+        allH2F.add(h2_ThetaPhiQPREC);
         h2_ThetaPhiQPTRIGGER = new H2F("h2_ThetaPhiQPTRIGGER", "h2_ThetaPhiQPTRIGGER", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQPGEN);
+        allH2F.add(h2_ThetaPhiQPTRIGGER);
         h2_ThetaPhiQPTRIGGER2 = new H2F("h2_ThetaPhiQPTRIGGER2", "h2_ThetaPhiQPTRIGGER2", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQPGEN);
+        allH2F.add(h2_ThetaPhiQPTRIGGER2);
 
         h2_ThetaPhiQMGEN = new H2F("h2_ThetaPhiQMGEN", "h2_ThetaPhiQMGEN", 100, -180., 180., 100, 0, 60.);
         allH2F.add(h2_ThetaPhiQMGEN);
         h2_ThetaPhiQMREC = new H2F("h2_ThetaPhiQMREC", "h2_ThetaPhiQMREC", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQMGEN);
+        allH2F.add(h2_ThetaPhiQMREC);
         h2_ThetaPhiQMTRIGGER = new H2F("h2_ThetaPhiQMTRIGGER", "h2_ThetaPhiQMTRIGGER", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQMGEN);
+        allH2F.add(h2_ThetaPhiQMTRIGGER);
         h2_ThetaPhiQMTRIGGER2 = new H2F("h2_ThetaPhiQMTRIGGER2", "h2_ThetaPhiQMTRIGGER2", 100, -180., 180., 100, 0, 60.);
-        allH2F.add(h2_ThetaPhiQMGEN);
+        allH2F.add(h2_ThetaPhiQMTRIGGER2);
 
         h1_vsDistanceAllREC = new H1F("h1_vsDistanceAllREC", "h1_vsDistanceAllREC", 400, 0., 400.);
         allH1F.add(h1_vsDistanceAllREC);
