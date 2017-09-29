@@ -177,6 +177,9 @@ public class CrossMatcherToRawFTOFHits extends CrossMatcher {
         double y = crossProj.y();
         double csi = Math.sqrt(crossProj.x() * crossProj.x() + (crossProj.z() - l0FTOF / Math.cos(Math.toRadians(thetaAnglePlaneFTOF))) * (crossProj.z() - l0FTOF / Math.cos(Math.toRadians(thetaAnglePlaneFTOF))));
 
+        
+        
+        
         /* The bar coordinates */
         int paddleN = hit.get_Paddle();
         double csiBar = hFTOF - counterWidthFTOF / 2 + paddleN * counterWidthFTOF;
@@ -188,6 +191,8 @@ public class CrossMatcherToRawFTOFHits extends CrossMatcher {
         double yBarMax = yBar + barLength(paddleN) / 2;
 
         /* Now check */
+        
+      
 
         /* Case1: crossProj within counter area */
         if ((csi > csiBarMin) && (csi < csiBarMax) && (y > yBarMin) && (y < yBarMax)) {
@@ -230,7 +235,12 @@ public class CrossMatcherToRawFTOFHits extends CrossMatcher {
             if (distance <= 1) ret = true;
 
         }
-
+        if (analysisClass.nevent==1540){
+            System.out.println(" DEBUG_CROSS_TOF --> "+ret);
+            System.out.println(crossProj.toString());
+            System.out.println(y+" "+csi+" "+yBarMin+" "+yBarMax+" "+csiBarMin+" "+csiBarMax);
+            System.out.println(hit.get_Sector()+" "+hit.get_Panel()+" "+hit.get_Paddle());
+        }
         return ret;
 
     }

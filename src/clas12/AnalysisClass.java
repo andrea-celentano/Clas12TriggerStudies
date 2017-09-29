@@ -177,18 +177,22 @@ public class AnalysisClass {
     private void matchToFTOFHits(int layer, List<? extends MatchedCross> crosses, List<ReconTOFHit> hits[]) {
         switch (layer) {
         case 1:
+            break;
         case 2:
             this.matchToFTOF1BHits(crosses, hits);
-            return; // not yet implemented
+            break;
         case 3:
             this.matchToFTOF2Hits(crosses, hits);
-            return;
+            break;
         }
+        return;
     }
 
     private void matchToFTOF1BHits(List<? extends MatchedCross> crosses, List<ReconTOFHit> hits[]) {
         boolean isMatched = false;
+
         for (MatchedCross cross : crosses) {
+
             isMatched = this.FTOF1BMatcher.matchCrossToFTOFHits(cross, hits[cross.get_Sector() - 1]);
             cross.setIsMatchedToFTOF1B(isMatched);
         }
@@ -272,6 +276,8 @@ public class AnalysisClass {
     /* Should be called only when there's one gen. particle only! */
     private void doDirectAnalysis() {
 
+        if (genParticles.size() > 1) return;
+
         double theta, phi, p;
         int imom;
         int q;
@@ -286,148 +292,142 @@ public class AnalysisClass {
         Integer tmpI;
         boolean genParticleIsRecon = false;
 
-        for (Particle particle : genParticles) {
+        Particle particle = genParticles.get(0);
 
-            idGen++;
-            genParticleIsRecon = false;
-            nMatchingsCrossesFTOF1B = 0;
-            nMatchingsCrossesFTOF2 = 0;
-            nMatchingsCrossesEC = 0;
+        idGen++;
+        genParticleIsRecon = false;
+        nMatchingsCrossesFTOF1B = 0;
+        nMatchingsCrossesFTOF2 = 0;
+        nMatchingsCrossesEC = 0;
 
-            /* Get the variables */
-            theta = Math.toDegrees(particle.theta());
-            phi = Math.toDegrees(particle.phi());
-            p = particle.p();
-            q = particle.charge();
-            pid = particle.pid();
+        /* Get the variables */
+        theta = Math.toDegrees(particle.theta());
+        phi = Math.toDegrees(particle.phi());
+        p = particle.p();
+        q = particle.charge();
+        pid = particle.pid();
 
-            imom = this.getMomentumIndex(p);
-            if (imom < 0) continue;
+        imom = this.getMomentumIndex(p);
+        if (imom < 0) return;
 
-            /* Fill the "generated histograms" */
-            guiClass.getHistogram2D("h2_ThetaPhiAllGEN").fill(phi, theta);
-            guiClass.getHistogram2D("h2_ThetaPhiAllGEN_"+imom).fill(phi, theta);
+        /* Fill the "generated histograms" */
+        guiClass.getHistogram2D("h2_ThetaPhiAllGEN").fill(phi, theta);
+        guiClass.getHistogram2D("h2_ThetaPhiAllGEN_" + imom).fill(phi, theta);
+
+        if (q > 0) {
+            guiClass.getHistogram2D("h2_ThetaPhiQPGEN").fill(phi, theta);
+            guiClass.getHistogram2D("h2_ThetaPhiQPGEN_" + imom).fill(phi, theta);
+        }
+        if (q < 0) {
+            guiClass.getHistogram2D("h2_ThetaPhiQMGEN").fill(phi, theta);
+            guiClass.getHistogram2D("h2_ThetaPhiQMGEN_" + imom).fill(phi, theta);
+        }
+        /*
+         * Now check if, among the reconstructed tracks, there's one matching to this gen. particle. If so, fill the reconstructed histograms
+         */
+        for (TrackMatchedToGen track : tracksDC) {
+
+            if (track.getIdGen() == idGen) {
+                genParticleIsRecon = true;
+
+                /* Also fill the "vsDistance" histograms for the EC-matching */
+                for (int ibin = 0; ibin < guiClass.getHistogram1D("h1_vsDistanceAllREC").getxAxis().getNBins(); ibin++) {
+                    double thisD = guiClass.getHistogram1D("h1_vsDistanceAllREC").getxAxis().getBinCenter(ibin);
+                    if (track.getMinDistanceEC() < thisD) {
+                        if (q > 0) {
+                            guiClass.getHistogram1D("h1_vsDistanceQPREC").incrementBinContent(ibin);
+                            guiClass.getHistogram1D("h1_vsDistanceQPREC_" + imom).incrementBinContent(ibin);
+                        }
+                        if (q < 0) {
+                            guiClass.getHistogram1D("h1_vsDistanceQMREC").incrementBinContent(ibin);
+                            guiClass.getHistogram1D("h1_vsDistanceQMREC_" + imom).incrementBinContent(ibin);
+                        }
+                        guiClass.getHistogram1D("h1_vsDistanceAllREC").incrementBinContent(ibin);
+                        guiClass.getHistogram1D("h1_vsDistanceAllREC_" + imom).incrementBinContent(ibin);
+                    }
+                }
+                break;
+            }
+        }
+
+        /*
+         * Move forward only if this generated particle has been reconstructed
+         */
+        if (genParticleIsRecon) {
+            nTracksWithR3Cross++;
+            tmpI = nTracks_vsP.get(imom);
+            tmpI++;
+            nTracks_vsP.set(imom, tmpI);
+            guiClass.getHistogram2D("h2_ThetaPhiAllREC").fill(phi, theta);
+            guiClass.getHistogram2D("h2_ThetaPhiAllREC_" + imom).fill(phi, theta);
 
             if (q > 0) {
-                guiClass.getHistogram2D("h2_ThetaPhiQPGEN").fill(phi, theta);
-                guiClass.getHistogram2D("h2_ThetaPhiQPGEN_"+imom).fill(phi, theta);
+                nTracksQPWithR3Cross++;
+                tmpI = nTracksQP_vsP.get(imom);
+                tmpI++;
+                nTracksQP_vsP.set(imom, tmpI);
+
+                guiClass.getHistogram2D("h2_ThetaPhiQPREC").fill(phi, theta);
+                guiClass.getHistogram2D("h2_ThetaPhiQPREC_" + imom).fill(phi, theta);
             }
             if (q < 0) {
-                guiClass.getHistogram2D("h2_ThetaPhiQMGEN").fill(phi, theta);
-                guiClass.getHistogram2D("h2_ThetaPhiQMGEN_"+imom).fill(phi, theta);
-            }
-            /*
-             * Now check if, among the reconstructed tracks, there's one matching to this gen. particle. If so, fill the reconstructed histograms
-             */
-            for (TrackMatchedToGen track : tracksDC) {
-
-                if (track.getIdGen() == idGen) {
-                    genParticleIsRecon = true;
-
-                    /* Also fill the "vsDistance" histograms for the EC-matching */
-                    for (int ibin = 0; ibin <  guiClass.getHistogram1D("h1_vsDistanceAllREC").getxAxis().getNBins(); ibin++) {
-                        double thisD = guiClass.getHistogram1D("h1_vsDistanceAllREC").getxAxis().getBinCenter(ibin);
-                        if (track.getMinDistanceEC() < thisD) {
-                            if (q > 0) {
-                                guiClass.getHistogram1D("h1_vsDistanceQPREC").incrementBinContent(ibin);
-                                guiClass.getHistogram1D("h1_vsDistanceQPREC_"+imom).incrementBinContent(ibin);
-                            }
-                            if (q < 0) {
-                                guiClass.getHistogram1D("h1_vsDistanceQMREC").incrementBinContent(ibin);
-                                guiClass.getHistogram1D("h1_vsDistanceQMREC_"+imom).incrementBinContent(ibin);
-                            }
-                            guiClass.getHistogram1D("h1_vsDistanceAllREC").incrementBinContent(ibin);
-                            guiClass.getHistogram1D("h1_vsDistanceAllREC_"+imom).incrementBinContent(ibin);
-                        }
-                    }
-                    break;
-                }
-            }
-
-            /*
-             * Move forward only if this generated particle has been reconstructed
-             */
-            if (genParticleIsRecon) {
-                nTracksWithR3Cross++;
-                tmpI = nTracks_vsP.get(imom);
+                nTracksQMWithR3Cross++;
+                tmpI = nTracksQM_vsP.get(imom);
                 tmpI++;
-                nTracks_vsP.set(imom, tmpI);
-                guiClass.getHistogram2D("h2_ThetaPhiAllREC").fill(phi, theta);
-                guiClass.getHistogram2D("h2_ThetaPhiAllREC_"+imom).fill(phi, theta);
+                nTracksQM_vsP.set(imom, tmpI);
+
+                guiClass.getHistogram2D("h2_ThetaPhiQMREC").fill(phi, theta);
+                guiClass.getHistogram2D("h2_ThetaPhiQMREC_" + imom).fill(phi, theta);
+            }
+
+            /* now count the number of cross-matchings */
+            for (MatchedCross cross : crossesDC) {
+                if (this.ECMatcher.distanceIsSmallerThanMin(cross.getMinDistanceEC())) nMatchingsCrossesEC++;
+                if (cross.isMatchedToFTOF2()) nMatchingsCrossesFTOF2++;
+                if (cross.isMatchedToFTOF1B()) nMatchingsCrossesFTOF1B++;
+            }
+
+            if (nMatchingsCrossesFTOF1B >= genParticles.size()) {
+
+                guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER").fill(phi, theta);
+                guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER_" + imom).fill(phi, theta);
 
                 if (q > 0) {
-                    nTracksQPWithR3Cross++;
-                    tmpI = nTracksQP_vsP.get(imom);
-                    tmpI++;
-                    nTracksQP_vsP.set(imom, tmpI);
-
-                    guiClass.getHistogram2D("h2_ThetaPhiQPREC").fill(phi, theta);
-                    guiClass.getHistogram2D("h2_ThetaPhiQPREC_"+imom).fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER").fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER_" + imom).fill(phi, theta);
                 }
                 if (q < 0) {
-                    nTracksQMWithR3Cross++;
-                    tmpI = nTracksQM_vsP.get(imom);
-                    tmpI++;
-                    nTracksQM_vsP.set(imom, tmpI);
-
-                    guiClass.getHistogram2D("h2_ThetaPhiQMREC").fill(phi, theta);
-                    guiClass.getHistogram2D("h2_ThetaPhiQMREC_"+imom).fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER").fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER_" + imom).fill(phi, theta);
                 }
+            }
+            if ((nMatchingsCrossesFTOF1B + nMatchingsCrossesFTOF2) >= genParticles.size()) {
+                // if (nMatchingsFTOF_DC_thisEvent >= genParticles.size()) {
+                guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER2").fill(phi, theta);
+                guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER2_" + imom).fill(phi, theta);
 
-                /* now count the number of cross-matchings */
-                for (MatchedCross cross : crossesDC) {
-                    if (this.ECMatcher.distanceIsSmallerThanMin(cross.getMinDistanceEC())) nMatchingsCrossesEC++;
-                    if (cross.isMatchedToFTOF2()) nMatchingsCrossesFTOF2++;
-                    if (cross.isMatchedToFTOF1B()) nMatchingsCrossesFTOF1B++;
+                if (q > 0) {
+                    guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER2").fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER2_" + imom).fill(phi, theta);
                 }
-
-                if (nMatchingsCrossesFTOF1B >= genParticles.size()) {
-
-                    guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER").fill(phi, theta);
-                    guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER_"+imom).fill(phi, theta);
-
-                    if (q > 0) {
-                        guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER").fill(phi, theta);
-                        guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER_"+imom).fill(phi, theta);
-                    }
-                    if (q < 0) {
-                        guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER").fill(phi, theta);
-                        guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER_"+imom).fill(phi, theta);
-                    }
+                if (q < 0) {
+                    guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER2").fill(phi, theta);
+                    guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER2_" + imom).fill(phi, theta);
                 }
-                // if ((nMatchingsCrossesFTOF1B + nMatchingsCrossesFTOF2) >=
-                // genParticles.size()) {
-                if (nMatchingsFTOF_DC_thisEvent >= genParticles.size()) {
-                    guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER2").fill(phi, theta);
-                    guiClass.getHistogram2D("h2_ThetaPhiAllTRIGGER2_"+imom).fill(phi, theta);
+            }
 
-                    if (q > 0) {
-                        guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER2").fill(phi, theta);
-                        guiClass.getHistogram2D("h2_ThetaPhiQPTRIGGER2_"+imom).fill(phi, theta);
-                    }
-                    if (q < 0) {
-                        guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER2").fill(phi, theta);
-                        guiClass.getHistogram2D("h2_ThetaPhiQMTRIGGER2_"+imom).fill(phi, theta);
-                    }
+            else {
+                if ((p > 5) && (theta > 20) && (theta < 30) && (phi > 20) && (phi < 30)) {
+                    System.out.println(nevent);
                 }
+            }
 
-                else {
-                    if ((p > 5) && (theta > 20) && (theta < 30) && (phi > 20) && (phi < 30)) {
-                        System.out.println(nevent);
-                    }
-                }
+        }/* end genParticleIsRecon */
 
-            }/* end genParticleIsRecon */
-
-        } /* end loop on genParticles */
     }
 
     /* Inverse analysis */
     private void doInverseCrossAnalysis() {
-
-        this.matchToClusters(crossesDC, clusters);
-        this.matchToFTOFHits(3, crossesDC, hitsFTOF2);
-        this.matchToFTOFHits(2, crossesDC, hitsFTOF1B);
 
         ArrayList<Double> matchingDistances = new ArrayList<Double>();
 
@@ -454,7 +454,7 @@ public class AnalysisClass {
         /*
          * Now, matchingDistances contains, for each cross in this event that has been matched, the corresponding distance. nMatchingsFTOF2 contains the number of crosses matching FTOF2
          */
-        for (int ibin = 0; ibin <   guiClass.getHistogram1D("h1_vsDistance1TRIGGER").getxAxis().getNBins(); ibin++) {
+        for (int ibin = 0; ibin < guiClass.getHistogram1D("h1_vsDistance1TRIGGER").getxAxis().getNBins(); ibin++) {
             thisD = guiClass.getHistogram1D("h1_vsDistance1TRIGGER").getxAxis().getBinCenter(ibin);
             nMatchingsEC = 0;
             for (Double matching : matchingDistances) {
@@ -673,8 +673,7 @@ public class AnalysisClass {
 
     }
 
-    
-    public H1F getHistogram1D(String name) {     
+    public H1F getHistogram1D(String name) {
         return guiClass.getHistogram1D(name);
     }
 
@@ -785,13 +784,13 @@ public class AnalysisClass {
             /* Perform matchings */
             /* Crosses */
             this.matchToClusters(crossesDC, clusters);
-            this.matchToFTOFHits(3, crossesDC, hitsFTOF2);
-            this.matchToFTOFHits(2, crossesDC, hitsFTOF1B);
+            this.matchToFTOFHits(3, crossesDC, hitsFTOF2); // FTOF2
+            this.matchToFTOFHits(2, crossesDC, hitsFTOF1B); // FTOF1B
 
             /* Tracks */
-            this.matchToClusters(tracksDC, clusters);
-            this.matchToFTOFHits(3, tracksDC, hitsFTOF2);
-            this.matchToFTOFHits(2, tracksDC, hitsFTOF1B);
+            // this.matchToClusters(tracksDC, clusters);
+            // this.matchToFTOFHits(3, tracksDC, hitsFTOF2);
+            // this.matchToFTOFHits(2, tracksDC, hitsFTOF1B);
             /*
              * Here do the "time-window analysis".
              */
