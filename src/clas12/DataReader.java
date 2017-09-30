@@ -10,6 +10,9 @@ import org.jlab.io.base.DataBank;
 
 public class DataReader {
 
+    private static final int ID_FTOF = 17;
+    private static final int ID_CAL = 16;
+
     private AnalysisClass analysisClass;
 
     private double minClusterE_ECAL = 0.01; // GeV
@@ -17,8 +20,13 @@ public class DataReader {
     private double minE_FTOF1B = 0.2; // MeV
     private double minE_FTOF1A = 0.2; // MeV
 
+    boolean hasDCsegmentsL1[];
+    boolean hasDCsegmentsL2[];
+
     public DataReader(AnalysisClass ana) {
         analysisClass = ana;
+        hasDCsegmentsL1 = new boolean[AnalysisClass.nSectors_CLAS12];
+        hasDCsegmentsL2 = new boolean[AnalysisClass.nSectors_CLAS12];
     }
 
     public double getMinClusterE_ECAL() {
@@ -53,20 +61,81 @@ public class DataReader {
         this.minE_FTOF2 = minE_FTOF2;
     }
 
-    public int makeGeneratedParticles(DataBank genParticlesDB, List<Particle> genParticles) {
+    public int makeGeneratedParticles(DataBank genParticlesDB, List<MatchedParticle> genParticles) {
         int nGenParticles = 0;
         int nrows = genParticlesDB.rows();
 
         genParticles.clear();
         for (int loop = 0; loop < nrows; loop++) {
-            Particle genParticle = new Particle(genParticlesDB.getInt("pid", loop), genParticlesDB.getFloat("px", loop), genParticlesDB.getFloat("py", loop), genParticlesDB.getFloat("pz", loop), genParticlesDB.getFloat("vx", loop), genParticlesDB.getFloat("vy", loop), genParticlesDB.getFloat("vz", loop));
+            MatchedParticle genParticle = new MatchedParticle(genParticlesDB.getInt("pid", loop), genParticlesDB.getFloat("px", loop), genParticlesDB.getFloat("py", loop), genParticlesDB.getFloat("pz", loop), genParticlesDB.getFloat("vx", loop), genParticlesDB.getFloat("vy", loop), genParticlesDB.getFloat("vz", loop));
             genParticles.add(genParticle);
             nGenParticles++;
         }
         return nGenParticles;
     }
 
-    public int makeCaloClusters(int detId, DataBank clustersDataBank, List<ECCluster>[] clusters) {
+    public int makeReconstructedParticles(DataBank recParticlesDB, DataBank recParticlesTOFDB, DataBank recParticlesCALDB, List<MatchedParticle> recParticles) {
+        int nRecParticles = 0;
+        int nrows = recParticlesDB.rows();
+        int nrowsTOF = recParticlesTOFDB.rows();
+        int nrowsCAL = recParticlesCALDB.rows();
+
+        int detector, particle;
+        boolean hasTOF, hasCAL;
+
+        recParticles.clear();
+        for (int loop = 0; loop < nrows; loop++) { /* Check if there's a corresponding entry in recParticlesTOFDB or in recParticlesCALDB */
+
+            hasTOF = false;
+            hasCAL = false;
+
+            for (int loopTOF = 0; loopTOF < nrowsTOF; loopTOF++) { /* Start with FTOF */
+                detector = recParticlesTOFDB.getByte("detector", loopTOF);
+                if (detector != DataReader.ID_FTOF) continue;
+                particle = recParticlesTOFDB.getShort("pindex", loopTOF);
+                if (particle == loop) {
+                    hasTOF = true;
+                    break;
+                }
+            }
+            if (!hasTOF) {
+                for (int loopCAL = 0; loopCAL < nrowsCAL; loopCAL++) {
+                    detector = recParticlesCALDB.getByte("detector", loopCAL);
+                    if (detector != DataReader.ID_CAL) continue;
+                    particle = recParticlesCALDB.getShort("pindex", loopCAL);
+                    if (particle == loop) {
+                        hasCAL = true;
+                        break;
+                    }
+                }
+            }
+
+            if (hasTOF || hasCAL) {
+                /*
+                 * so far, PID is not good in recon.
+                 * However, I will work with:
+                 * -> Momentum (from tracking)
+                 * -> Charge (from tracking)
+                 * Hence, if q>0, I set pip (211), if q<0, I set pim (-211), if q=0, I set gamma (22)
+                 */
+                byte charge = recParticlesDB.getByte("charge", loop);
+                int pid;
+                if (charge > 0)
+                    pid = 211;
+                else if (charge < 0)
+                    pid = -211;
+                else
+                    pid = 22;
+                MatchedParticle recParticle = new MatchedParticle(pid, 0.1, charge, recParticlesDB.getFloat("px", loop), recParticlesDB.getFloat("py", loop), recParticlesDB.getFloat("pz", loop), recParticlesDB.getFloat("vx", loop), recParticlesDB.getFloat("vy", loop), recParticlesDB.getFloat("vz", loop));
+                recParticles.add(recParticle);
+
+                nRecParticles++;
+            }
+        }
+        return nRecParticles;
+    }
+
+    public int makeCaloClusters(int detId, DataBank clustersDataBank, List<ECCluster>[] clusters, int DC, boolean[] hasDCsegments) {
         int nClusters = clustersDataBank.rows();
         int nClustersDet = 0;
 
@@ -89,7 +158,7 @@ public class DataReader {
             double energy = clustersDataBank.getFloat("energy", loop);
             double time = clustersDataBank.getFloat("time", loop);
 
-            analysisClass.getHistogram1D("h1_allClustersE_" + sector).fill(energy);
+            analysisClass.getHistogram1D("h1_allPCAL_E_" + sector).fill(energy);
 
             if (energy < this.minClusterE_ECAL) continue; /*
                                                            * just consider
@@ -109,14 +178,16 @@ public class DataReader {
             cluster.energy = energy;
             cluster.p0 = p0;
 
-            /* Add it to the list of clusters */
-            clusters[sector - 1].add(cluster);
+            /* Add it to the list of clusters - if there's any DC requirement, then don't put these in the output array! */
+            if ((DC == 0) || (hasDCsegments[sector - 1])) {
+                clusters[sector - 1].add(cluster);
+            }
         }
 
         return nClustersDet;
     }
 
-    public int makeFTOFHits(DataBank hitsRawFTOFDataBank, DataBank hitsReconFTOFDataBank, List<ReconTOFHit>[] hitsFTOF2, List<ReconTOFHit>[] hitsFTOF1B, List<ReconTOFHit>[] hitsFTOF1A) {
+    public int makeFTOFHits(DataBank hitsRawFTOFDataBank, DataBank hitsReconFTOFDataBank, List<ReconTOFHit>[] hitsFTOF2, List<ReconTOFHit>[] hitsFTOF1B, List<ReconTOFHit>[] hitsFTOF1A, int DC, boolean hasDCsegments[]) {
 
         int nRawFTOFHits = hitsRawFTOFDataBank.rows();
         int nReconFTOFHits = hitsReconFTOFDataBank.rows();
@@ -143,7 +214,7 @@ public class DataReader {
             float x = hitsReconFTOFDataBank.getFloat("x", loop);
             float y = hitsReconFTOFDataBank.getFloat("y", loop);
             float z = hitsReconFTOFDataBank.getFloat("z", loop);
-            
+
             /* Following lines are used to rotate the point to the sector system */
             Point3D p0 = new Point3D(x, y, z);
             p0.rotateZ(-(Math.toRadians((sector - 1) * AnalysisClass.phiAngle_CLAS12)));
@@ -156,27 +227,38 @@ public class DataReader {
             /* Should I put here also the L/R time coincidence? */
             switch (layer) {
             case 1:
-                if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A) && (timeL > 0) && (timeR > 0)) {
+                if ((energyL > this.minE_FTOF1A) && (energyR > this.minE_FTOF1A)) {
 
                     ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
                     hit.setP0(p0);
-                    hitsFTOF1A[sector - 1].add(hit);
+
+                    if ((DC == 0) || (hasDCsegments[sector - 1])) {
+                        hitsFTOF1A[sector - 1].add(hit);
+                    }
+
+                    analysisClass.getHistogram1D("h1_allTOF1A_E_"+sector).fill(energy);
                     analysisClass.getHistogram2D("h2_FTOF1AEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 2:
-                if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B) && (timeL > 0) && (timeR > 0)) {
+                if ((energyL > this.minE_FTOF1B) && (energyR > this.minE_FTOF1B)) {
                     ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
                     hit.setP0(p0);
-                    hitsFTOF1B[sector - 1].add(hit);
+                    if ((DC == 0) || (hasDCsegments[sector - 1])) {
+                        hitsFTOF1B[sector - 1].add(hit);
+                    }
+                    analysisClass.getHistogram1D("h1_allTOF1B_E_"+sector).fill(energy);
                     analysisClass.getHistogram2D("h2_FTOF1BEnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
             case 3: // panel2
-                if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2) && (timeL > 0) && (timeR > 0)) {
+                if ((energyL > this.minE_FTOF2) && (energyR > this.minE_FTOF2)) {
                     ReconTOFHit hit = new ReconTOFHit(sector, layer, component, id, energyL, energyR, timeL, timeR, energy, time);
                     hit.setP0(p0);
-                    hitsFTOF2[sector - 1].add(hit);
+                    if ((DC == 0) || (hasDCsegments[sector - 1])) {
+                        hitsFTOF2[sector - 1].add(hit);
+                    }
+                    analysisClass.getHistogram1D("h1_allTOF2_E_"+sector).fill(energy);
                     analysisClass.getHistogram2D("h2_FTOF2EnergyAll_LR").fill(energyL, energyR);
                 }
                 break;
@@ -346,13 +428,28 @@ public class DataReader {
         }
     }
 
-    public void makeDCSegments(DataBank segmentsDCDataBank, List<SimpleDCSegment> segments) {
+    public void makeDCSegments(DataBank segmentsDCDataBank, List<SimpleDCSegment> segments, boolean[] sectorHasR3Segments) {
         int nSegments = segmentsDCDataBank.rows();
+
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
+            hasDCsegmentsL1[ii] = false;
+            hasDCsegmentsL2[ii] = false;
+            sectorHasR3Segments[ii] = false;
+        }
 
         for (int isegment = 0; isegment < nSegments; isegment++) {
             int sector = segmentsDCDataBank.getByte("sector", isegment);
             int superlayer = segmentsDCDataBank.getByte("superlayer", isegment);
+
             segments.add(new SimpleDCSegment(sector, superlayer));
+
+            if (superlayer == 5) hasDCsegmentsL1[sector - 1] = true;
+            if (superlayer == 6) hasDCsegmentsL2[sector - 1] = true;
+
+        }
+
+        for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
+            if (hasDCsegmentsL1[ii] && hasDCsegmentsL2[ii]) sectorHasR3Segments[ii] = true;
         }
     }
 
@@ -370,7 +467,7 @@ public class DataReader {
      * (this is a "sector-like" check, but the reconstructed track considers the
      * phi angle properly!)
      */
-    public int matchReconstructedTracks(List<Particle> genParticles, List<TrackMatchedToGen> recParticles) {
+    public int matchReconstructedTracks(List<MatchedParticle> genParticles, List<TrackMatchedToGen> recParticles) {
         int nMatched = 0;
         int iGen = 0;
         int charge;
@@ -420,5 +517,35 @@ public class DataReader {
         }
 
         return nMatched;
+    }
+
+    /* Check if generated particles have been reconstructed, if so match them */
+    public void matchReconstructedParticles(List<MatchedParticle> recParticles, List<MatchedParticle> genParticles) {
+
+        for (int iGen = 0; iGen < genParticles.size(); iGen++) {
+            MatchedParticle genParticle = genParticles.get(iGen);
+
+            for (int iRec = 0; iRec < recParticles.size(); iRec++) {
+                MatchedParticle recParticle = recParticles.get(iRec);
+
+                if (analysisClass.nevent == 17969) {
+                    System.out.println("GEN: " + genParticle.vector().vect().toString() + " REC: " + recParticle.vector().vect().toString());
+                }
+
+                if (recParticle.charge() != genParticle.charge()) continue;
+                if (Math.abs(recParticle.p() - genParticle.p()) / genParticle.p() > 0.2) continue;
+                if (Math.abs(recParticle.theta() - genParticle.theta()) > Math.toRadians(10.)) continue;
+                if (Math.abs(recParticle.phi() - genParticle.phi()) > Math.toRadians(20.)) continue;
+
+                genParticle.setMatched(true);
+                genParticle.setIdMatch(iRec);
+
+                recParticle.setMatched(true);
+                recParticle.setIdMatch(iGen);
+                break; // if we arrive here - it means the matching was found.
+            }
+
+        }
+
     }
 }

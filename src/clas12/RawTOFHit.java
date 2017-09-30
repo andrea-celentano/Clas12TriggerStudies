@@ -1,9 +1,11 @@
 package clas12;
 
+import org.jlab.geom.prim.Point3D;
+
 /*Since the AHit class in TOF package is quite complicate (and I do not need all the features), and the Hit class inherits from hit, it is better to create my own simple c
  * class
  */
-public class RawTOFHit {
+public class RawTOFHit  implements HitWithDCPositionEnergyTimeInfo {
     private int _Sector;
     private int _Panel;
     private int _Paddle;
@@ -13,6 +15,10 @@ public class RawTOFHit {
     private float _TimeL;
     private float _TimeR;
     private float _TimeAVG;
+    
+    private boolean isMatchedToR3Segments;
+    private boolean isMatchedToR3CrossProjection;
+    private double distanceR3CrossProjection;
 
     public RawTOFHit(int _Sector, int _Panel, int _Paddle, int _Id, float _EnergyL, float _EnergyR, float _TimeL, float _TimeR) {
         super();
@@ -98,5 +104,65 @@ public class RawTOFHit {
     public void set_TimeAVG(float _TimeAVG) {
         this._TimeAVG = _TimeAVG;
     }
+    
+    
+    @Override
+    public boolean isMatchedToR3Segments() {
+        return isMatchedToR3Segments;
+    }
 
+    @Override
+    public boolean isMatchedToR3CrossProjection() {
+        return isMatchedToR3CrossProjection;
+    }
+
+    @Override
+    public double distanceR3CrossProjection() {
+        return distanceR3CrossProjection;
+    }
+
+    @Override
+    public void setIsMatchedToR3Segments(boolean val) {
+        if (!val) {
+            isMatchedToR3CrossProjection = false;
+            isMatchedToR3Segments = false;
+        } else {
+            isMatchedToR3CrossProjection = true;
+
+        }
+    }
+
+    @Override
+    public void setIsMatchedToR3CrossProjection(boolean val) {
+        if (val) {
+            isMatchedToR3CrossProjection = true;
+            isMatchedToR3Segments = true;
+        } else {
+            isMatchedToR3CrossProjection = false;
+        }
+    }
+
+    @Override
+    public void setDistanceR3CrossProjection(double val) {
+        this.distanceR3CrossProjection=val;
+
+    }
+
+    @Override
+    public Point3D getPosition() {
+        return null;
+    }
+
+    @Override
+    public double getTime() {   
+        return 0;
+    }
+
+    @Override
+    public double getEnergy() {     
+        return 0;
+    }
+    
+    
+    
 }

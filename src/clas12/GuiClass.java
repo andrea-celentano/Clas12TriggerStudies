@@ -9,9 +9,21 @@ import org.jlab.groot.ui.TCanvas;
 public class GuiClass {
 
     /* Here goes histograms */
-    ArrayList<H1F> h1_minCrossClusterDistance;
-    ArrayList<H1F> h1_allClustersE;
-    ArrayList<H1F> h1_closerClustersE;
+    ArrayList<H1F> h1_minPCAL_Distance;
+    ArrayList<H1F> h1_allPCAL_E;
+    ArrayList<H1F> h1_matchedPCAL_E;
+
+    ArrayList<H1F> h1_minTOF1A_Distance;
+    ArrayList<H1F> h1_allTOF1A_E;
+    ArrayList<H1F> h1_matchedTOF1A_E;
+
+    ArrayList<H1F> h1_minTOF1B_Distance;
+    ArrayList<H1F> h1_allTOF1B_E;
+    ArrayList<H1F> h1_matchedTOF1B_E;
+
+    ArrayList<H1F> h1_minTOF2_Distance;
+    ArrayList<H1F> h1_allTOF2_E;
+    ArrayList<H1F> h1_matchedTOF2_E;
 
     H2F h2_ThetaPhiAllGEN;
     H2F h2_ThetaPhiAllREC;
@@ -140,24 +152,84 @@ public class GuiClass {
 
         this.allH1F = new ArrayList<H1F>();
         this.allH2F = new ArrayList<H2F>();
-        h1_minCrossClusterDistance = new ArrayList<H1F>();
 
+        h1_minPCAL_Distance = new ArrayList<H1F>();
         for (int isector = 1; isector <= 6; isector++) {
-            h1_minCrossClusterDistance.add(new H1F("h1_minCrossClusterDistance_" + isector, "minCrossClusterDistance_" + isector + ";distance - cm", 100, 0, 500));
-            allH1F.add(h1_minCrossClusterDistance.get(isector - 1));
+            h1_minPCAL_Distance.add(new H1F("h1_minPCAL_Distance_" + isector, "h1_minPCAL_Distance_" + isector + ";distance - cm", 100, 0, 500));
+            allH1F.add(h1_minPCAL_Distance.get(isector - 1));
         }
 
-        h1_allClustersE = new ArrayList<H1F>();
+        h1_allPCAL_E = new ArrayList<H1F>();
         for (int isector = 1; isector <= 6; isector++) {
-            h1_allClustersE.add(new H1F("h1_allClustersE_" + isector, "h1_allClustersE_" + isector + ";Energy (GeV)", 100, 0, .3));
-            allH1F.add(h1_allClustersE.get(isector - 1));
+            h1_allPCAL_E.add(new H1F("h1_allPCAL_E_" + isector, "h1_allPCAL_E_" + isector + ";Energy (GeV)", 100, 0, .3));
+            allH1F.add(h1_allPCAL_E.get(isector - 1));
         }
 
-        h1_closerClustersE = new ArrayList<H1F>();
+        h1_matchedPCAL_E = new ArrayList<H1F>();
         for (int isector = 1; isector <= AnalysisClass.nSectors_CLAS12; isector++) {
-            h1_closerClustersE.add(new H1F("h1_closerClustersE_" + isector, "h1_closerClustersE_" + isector + ";Energy (GeV)", 100, 0, .3));
-            allH1F.add(h1_closerClustersE.get(isector - 1));
+            h1_matchedPCAL_E.add(new H1F("h1_matchedPCAL_E_" + isector, "h1_matchedPCAL_E_" + isector + ";Energy (GeV)", 100, 0, .3));
+            allH1F.add(h1_matchedPCAL_E.get(isector - 1));
         }
+        
+        
+        h1_minTOF1A_Distance = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_minTOF1A_Distance.add(new H1F("h1_minTOF1A_Distance_" + isector, "h1_minTOF1A_Distance_" + isector + ";distance - cm", 100, 0, 500));
+            allH1F.add(h1_minTOF1A_Distance.get(isector - 1));
+        }
+
+        h1_allTOF1A_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF1A_E.add(new H1F("h1_allTOF1A_E_" + isector, "h1_allTOF1A_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_allTOF1A_E.get(isector - 1));
+        }
+
+        h1_matchedTOF1A_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= AnalysisClass.nSectors_CLAS12; isector++) {
+            h1_matchedTOF1A_E.add(new H1F("h1_matchedTOF1A_E_" + isector, "h1_matchedTOF1A_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_matchedTOF1A_E.get(isector - 1));
+        }
+        
+        
+        h1_minTOF1B_Distance = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_minTOF1B_Distance.add(new H1F("h1_minTOF1B_Distance_" + isector, "h1_minTOF1B_Distance_" + isector + ";distance - cm", 100, 0, 500));
+            allH1F.add(h1_minTOF1B_Distance.get(isector - 1));
+        }
+
+        h1_allTOF1B_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF1B_E.add(new H1F("h1_allTOF1B_E_" + isector, "h1_allTOF1B_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_allTOF1B_E.get(isector - 1));
+        }
+
+        h1_matchedTOF1B_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= AnalysisClass.nSectors_CLAS12; isector++) {
+            h1_matchedTOF1B_E.add(new H1F("h1_matchedTOF1B_E_" + isector, "h1_matchedTOF1B_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_matchedTOF1B_E.get(isector - 1));
+        }
+        
+        h1_minTOF2_Distance = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_minTOF2_Distance.add(new H1F("h1_minTOF2_Distance_" + isector, "h1_minTOF2_Distance_" + isector + ";distance - cm", 100, 0, 500));
+            allH1F.add(h1_minTOF2_Distance.get(isector - 1));
+        }
+
+        h1_allTOF2_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF2_E.add(new H1F("h1_allTOF2_E_" + isector, "h1_allTOF2_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_allTOF2_E.get(isector - 1));
+        }
+
+        h1_matchedTOF2_E = new ArrayList<H1F>();
+        for (int isector = 1; isector <= AnalysisClass.nSectors_CLAS12; isector++) {
+            h1_matchedTOF2_E.add(new H1F("h1_matchedTOF2_E_" + isector, "h1_matchedTOF2_E_" + isector + ";Energy (GeV)", 100, 0, 30));
+            allH1F.add(h1_matchedTOF2_E.get(isector - 1));
+        }
+        
+        
+        
+        
 
         h2_ThetaPhiAllGEN = new H2F("h2_ThetaPhiAllGEN", "h2_ThetaPhiAllGEN", 100, -180., 180., 100, 0, 60.);
         allH2F.add(h2_ThetaPhiAllGEN);
@@ -248,17 +320,17 @@ public class GuiClass {
 
         for (int ibin = 0; ibin < Parray.size() - 1; ibin++) {
 
-            h1_vsDistanceAllREC_vsP.add(new H1F("h1_vsDistanceAllREC_"+ibin, "h1_vsDistanceAllREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQPREC_vsP.add(new H1F("h1_vsDistanceQPREC_"+ibin, "h1_vsDistanceQPREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQMREC_vsP.add(new H1F("h1_vsDistanceQMREC_"+ibin, "h1_vsDistanceQMREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceAllREC_vsP.add(new H1F("h1_vsDistanceAllREC_" + ibin, "h1_vsDistanceAllREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQPREC_vsP.add(new H1F("h1_vsDistanceQPREC_" + ibin, "h1_vsDistanceQPREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQMREC_vsP.add(new H1F("h1_vsDistanceQMREC_" + ibin, "h1_vsDistanceQMREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
 
-            h1_vsDistanceAllTRIGGER_vsP.add(new H1F("h1_vsDistanceAllTRIGGER_"+ibin, "h1_vsDistanceAllTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQPTRIGGER_vsP.add(new H1F("h1_vsDistanceQPTRIGGER_"+ibin, "h1_vsDistanceQPTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQMTRIGGER_vsP.add(new H1F("h1_vsDistanceQMTRIGGER_"+ibin, "h1_vsDistanceQMTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceAllTRIGGER_vsP.add(new H1F("h1_vsDistanceAllTRIGGER_" + ibin, "h1_vsDistanceAllTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQPTRIGGER_vsP.add(new H1F("h1_vsDistanceQPTRIGGER_" + ibin, "h1_vsDistanceQPTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQMTRIGGER_vsP.add(new H1F("h1_vsDistanceQMTRIGGER_" + ibin, "h1_vsDistanceQMTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
 
-            h1_vsDistanceAllTRIGGER2_vsP.add(new H1F("h1_vsDistanceAllTRIGGER2_"+ibin, "h1_vsDistanceAllTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQPTRIGGER2_vsP.add(new H1F("h1_vsDistanceQPTRIGGER2_"+ibin, "h1_vsDistanceQPTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
-            h1_vsDistanceQMTRIGGER2_vsP.add(new H1F("h1_vsDistanceQMTRIGGER2_"+ibin, "h1_vsDistanceQMTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceAllTRIGGER2_vsP.add(new H1F("h1_vsDistanceAllTRIGGER2_" + ibin, "h1_vsDistanceAllTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQPTRIGGER2_vsP.add(new H1F("h1_vsDistanceQPTRIGGER2_" + ibin, "h1_vsDistanceQPTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
+            h1_vsDistanceQMTRIGGER2_vsP.add(new H1F("h1_vsDistanceQMTRIGGER2_" + ibin, "h1_vsDistanceQMTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 400, 0., 400.));
 
             allH1F.add(h1_vsDistanceAllREC_vsP.get(ibin));
             allH1F.add(h1_vsDistanceQPREC_vsP.get(ibin));
@@ -270,30 +342,30 @@ public class GuiClass {
             allH1F.add(h1_vsDistanceQPTRIGGER2_vsP.get(ibin));
             allH1F.add(h1_vsDistanceQMTRIGGER2_vsP.get(ibin));
 
-            h2_ThetaPhiAllGEN_vsP.add(new H2F("h2_ThetaPhiAllGEN_"+ibin, "h2_ThetaPhiAllGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiAllREC_vsP.add(new H2F("h2_ThetaPhiAllREC_"+ibin, "h2_ThetaPhiAllREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiAllTRIGGER_vsP.add(new H2F("h2_ThetaPhiAllTRIGGER_"+ibin, "h2_ThetaPhiAllTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiAllTRIGGER2_vsP.add(new H2F("h2_ThetaPhiAllTRIGGER2_"+ibin, "h2_ThetaPhiAllTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiAllGEN_vsP.add(new H2F("h2_ThetaPhiAllGEN_" + ibin, "h2_ThetaPhiAllGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiAllREC_vsP.add(new H2F("h2_ThetaPhiAllREC_" + ibin, "h2_ThetaPhiAllREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiAllTRIGGER_vsP.add(new H2F("h2_ThetaPhiAllTRIGGER_" + ibin, "h2_ThetaPhiAllTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiAllTRIGGER2_vsP.add(new H2F("h2_ThetaPhiAllTRIGGER2_" + ibin, "h2_ThetaPhiAllTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
 
             allH2F.add(h2_ThetaPhiAllGEN_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiAllREC_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiAllTRIGGER_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiAllTRIGGER2_vsP.get(ibin));
 
-            h2_ThetaPhiQPGEN_vsP.add(new H2F("h2_ThetaPhiQPGEN_"+ibin, "h2_ThetaPhiQPGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQPREC_vsP.add(new H2F("h2_ThetaPhiQPREC_"+ibin, "h2_ThetaPhiQPREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQPTRIGGER_vsP.add(new H2F("h2_ThetaPhiQPTRIGGER_"+ibin, "h2_ThetaPhiQPTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQPTRIGGER2_vsP.add(new H2F("h2_ThetaPhiQPTRIGGER2_"+ibin, "h2_ThetaPhiQPTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQPGEN_vsP.add(new H2F("h2_ThetaPhiQPGEN_" + ibin, "h2_ThetaPhiQPGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQPREC_vsP.add(new H2F("h2_ThetaPhiQPREC_" + ibin, "h2_ThetaPhiQPREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQPTRIGGER_vsP.add(new H2F("h2_ThetaPhiQPTRIGGER_" + ibin, "h2_ThetaPhiQPTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQPTRIGGER2_vsP.add(new H2F("h2_ThetaPhiQPTRIGGER2_" + ibin, "h2_ThetaPhiQPTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
 
             allH2F.add(h2_ThetaPhiQPGEN_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiQPREC_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiQPTRIGGER_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiQPTRIGGER2_vsP.get(ibin));
 
-            h2_ThetaPhiQMGEN_vsP.add(new H2F("h2_ThetaPhiQMGEN_"+ibin, "h2_ThetaPhiQMGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQMREC_vsP.add(new H2F("h2_ThetaPhiQMREC_"+ibin, "h2_ThetaPhiQMREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQMTRIGGER_vsP.add(new H2F("h2_ThetaPhiQMTRIGGER_"+ibin, "h2_ThetaPhiQMTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
-            h2_ThetaPhiQMTRIGGER2_vsP.add(new H2F("h2_ThetaPhiQMTRIGGER2_"+ibin, "h2_ThetaPhiQMTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQMGEN_vsP.add(new H2F("h2_ThetaPhiQMGEN_" + ibin, "h2_ThetaPhiQMGEN_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQMREC_vsP.add(new H2F("h2_ThetaPhiQMREC_" + ibin, "h2_ThetaPhiQMREC_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQMTRIGGER_vsP.add(new H2F("h2_ThetaPhiQMTRIGGER_" + ibin, "h2_ThetaPhiQMTRIGGER_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
+            h2_ThetaPhiQMTRIGGER2_vsP.add(new H2F("h2_ThetaPhiQMTRIGGER2_" + ibin, "h2_ThetaPhiQMTRIGGER2_" + Parray.get(ibin) + "_" + Parray.get(ibin + 1), 100, -180., 180., 100, 0, 60.));
 
             allH2F.add(h2_ThetaPhiQMGEN_vsP.get(ibin));
             allH2F.add(h2_ThetaPhiQMREC_vsP.get(ibin));
@@ -328,36 +400,126 @@ public class GuiClass {
     public void showHistograms() {
 
         TCanvas trk1 = new TCanvas("trk1", 1600, 1000);
-        trk1.divide(2, 2);
+        trk1.divide(4, 3);
+        trk1.cd(0);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_minPCAL_Distance.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_minPCAL_Distance.get(isector - 1));
+            } else {
+                trk1.draw(h1_minPCAL_Distance.get(isector - 1), "same");
+            }
+        }
+        trk1.cd(4);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allPCAL_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_allPCAL_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_allPCAL_E.get(isector - 1), "same");
+            }
+        }
+        trk1.cd(8);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_matchedPCAL_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_matchedPCAL_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_matchedPCAL_E.get(isector - 1), "same");
+            }
+        }
+        
         trk1.cd(1);
         for (int isector = 1; isector <= 6; isector++) {
-            h1_minCrossClusterDistance.get(isector - 1).setLineColor(isector);
+            h1_minTOF1A_Distance.get(isector - 1).setLineColor(isector);
             if (isector == 1) {
-                trk1.draw(h1_minCrossClusterDistance.get(isector - 1));
+                trk1.draw(h1_minTOF1A_Distance.get(isector - 1));
             } else {
-                trk1.draw(h1_minCrossClusterDistance.get(isector - 1), "same");
+                trk1.draw(h1_minTOF1A_Distance.get(isector - 1), "same");
             }
         }
-
+        trk1.cd(5);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF1A_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_allTOF1A_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_allTOF1A_E.get(isector - 1), "same");
+            }
+        }
+        trk1.cd(9);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_matchedTOF1A_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_matchedTOF1A_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_matchedTOF1A_E.get(isector - 1), "same");
+            }
+        }
+        
         trk1.cd(2);
         for (int isector = 1; isector <= 6; isector++) {
-            h1_allClustersE.get(isector - 1).setLineColor(isector);
+            h1_minTOF1B_Distance.get(isector - 1).setLineColor(isector);
             if (isector == 1) {
-                trk1.draw(h1_allClustersE.get(isector - 1));
+                trk1.draw(h1_minTOF1B_Distance.get(isector - 1));
             } else {
-                trk1.draw(h1_allClustersE.get(isector - 1), "same");
+                trk1.draw(h1_minTOF1B_Distance.get(isector - 1), "same");
             }
         }
-
+        trk1.cd(6);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF1B_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_allTOF1B_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_allTOF1B_E.get(isector - 1), "same");
+            }
+        }
+        trk1.cd(10);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_matchedTOF1B_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_matchedTOF1B_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_matchedTOF1B_E.get(isector - 1), "same");
+            }
+        }
+        
+        
         trk1.cd(3);
         for (int isector = 1; isector <= 6; isector++) {
-            h1_closerClustersE.get(isector - 1).setLineColor(isector);
+            h1_minTOF2_Distance.get(isector - 1).setLineColor(isector);
             if (isector == 1) {
-                trk1.draw(h1_closerClustersE.get(isector - 1));
+                trk1.draw(h1_minTOF2_Distance.get(isector - 1));
             } else {
-                trk1.draw(h1_closerClustersE.get(isector - 1), "same");
+                trk1.draw(h1_minTOF2_Distance.get(isector - 1), "same");
             }
         }
+        trk1.cd(7);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_allTOF2_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_allTOF2_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_allTOF2_E.get(isector - 1), "same");
+            }
+        }
+        trk1.cd(11);
+        for (int isector = 1; isector <= 6; isector++) {
+            h1_matchedTOF2_E.get(isector - 1).setLineColor(isector);
+            if (isector == 1) {
+                trk1.draw(h1_matchedTOF2_E.get(isector - 1));
+            } else {
+                trk1.draw(h1_matchedTOF2_E.get(isector - 1), "same");
+            }
+        }
+        
+        
+        
+        
+        
+        
+        
 
         TCanvas trkAllP = new TCanvas("allP", 1600, 1000);
         trkAllP.divide(5, 3);
@@ -381,7 +543,7 @@ public class GuiClass {
         trkAllP.draw(h2_ThetaPhiQPTRIGGER2, "colz");
 
         trkAllP.cd(9);
-        trkAllP.getCanvas().getPad(9).getAxisZ().setLog(true);
+        trkAllP.getCanvas().getPad(9).getAxisZ().setLog(false);
         trkAllP.draw(h2_ThetaPhiQPEFF, "colz");
 
         trkAllP.cd(10);
@@ -397,7 +559,7 @@ public class GuiClass {
         trkAllP.draw(h2_ThetaPhiQMTRIGGER2, "colz");
 
         trkAllP.cd(14);
-        trkAllP.getCanvas().getPad(14).getAxisZ().setLog(true);
+        trkAllP.getCanvas().getPad(14).getAxisZ().setLog(false);
         trkAllP.draw(h2_ThetaPhiQMEFF, "colz");
 
         ArrayList<TCanvas> TCanvasArray = new ArrayList<TCanvas>();
@@ -425,7 +587,7 @@ public class GuiClass {
             TCanvasArray.get(ii).draw(h2_ThetaPhiQPTRIGGER2_vsP.get(ii), "colz");
 
             TCanvasArray.get(ii).cd(9);
-            TCanvasArray.get(ii).getCanvas().getPad(9).getAxisZ().setLog(true);
+            TCanvasArray.get(ii).getCanvas().getPad(9).getAxisZ().setLog(false);
             TCanvasArray.get(ii).draw(h2_ThetaPhiQPEFF_vsP.get(ii), "colz");
 
             TCanvasArray.get(ii).cd(10);
@@ -441,7 +603,7 @@ public class GuiClass {
             TCanvasArray.get(ii).draw(h2_ThetaPhiQMTRIGGER2_vsP.get(ii), "colz");
 
             TCanvasArray.get(ii).cd(14);
-            TCanvasArray.get(ii).getCanvas().getPad(14).getAxisZ().setLog(true);
+            TCanvasArray.get(ii).getCanvas().getPad(14).getAxisZ().setLog(false);
             TCanvasArray.get(ii).draw(h2_ThetaPhiQMEFF_vsP.get(ii), "colz");
 
         }
@@ -481,27 +643,27 @@ public class GuiClass {
         cTOF.divide(3, 3);
 
         cTOF.cd(0);
-        cTOF.getCanvas().getPad(0).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(0).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF1AEnergyAll_LR, "colz");
 
         cTOF.cd(1);
-        cTOF.getCanvas().getPad(1).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(1).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF1BEnergyAll_LR, "colz");
 
         cTOF.cd(2);
-        cTOF.getCanvas().getPad(2).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(2).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF2EnergyAll_LR, "colz");
 
         cTOF.cd(3);
-        cTOF.getCanvas().getPad(3).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(3).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF1AEnergyMatched_LR, "colz");
 
         cTOF.cd(4);
-        cTOF.getCanvas().getPad(4).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(4).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF1BEnergyMatched_LR, "colz");
 
         cTOF.cd(5);
-        cTOF.getCanvas().getPad(5).getAxisZ().setLog(true);
+        cTOF.getCanvas().getPad(5).getAxisZ().setLog(false);
         cTOF.draw(h2_FTOF2EnergyMatched_LR, "colz");
         // cTOF2.draw(h2tmp,"colz");
         cTOF.cd(6);
@@ -511,15 +673,14 @@ public class GuiClass {
     public void processHistograms() {
 
         int nEvents = analysisClass.nevent;
-        int nTracksWithR3Cross = analysisClass.nTracksWithR3Cross;
-        int nTracksQPWithR3Cross = analysisClass.nTracksQPWithR3Cross;
-        int nTracksQMWithR3Cross = analysisClass.nTracksQMWithR3Cross;
+        int nTracksWithR3Cross = analysisClass.nTracksMatchedToGen;
+        int nTracksQPWithR3Cross = analysisClass.nTracksQPMatchedToGen;
+        int nTracksQMWithR3Cross = analysisClass.nTracksQMMatchedToGen;
 
-        ArrayList<Integer> nTracks_vsP = analysisClass.nTracks_vsP;
-        ArrayList<Integer> nTracksQP_vsP = analysisClass.nTracksQP_vsP;
-        ArrayList<Integer> nTracksQM_vsP = analysisClass.nTracksQM_vsP;
+        ArrayList<Integer> nTracks_vsP = analysisClass.nTracksMatchedToGen_vsP;
+        ArrayList<Integer> nTracksQP_vsP = analysisClass.nTracksMatchedToGenQP_vsP;
+        ArrayList<Integer> nTracksQM_vsP = analysisClass.nTracksMatchedToGenQM_vsP;
 
-        /* Last operations */
         h1_vsDistanceAllEFF = h1_vsDistanceAllREC.histClone("h1_vsDistanceAllEFF");
         h1_vsDistanceAllEFF.setTitle("h1_vsDistanceAllEFF");
         h1_vsDistanceAllEFF.divide(1. * nTracksWithR3Cross);

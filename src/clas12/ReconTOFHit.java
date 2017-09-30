@@ -2,7 +2,7 @@ package clas12;
 
 import org.jlab.geom.prim.Point3D;
 
-public class ReconTOFHit extends RawTOFHit implements HitWithPositionEnergyTime  {
+public class ReconTOFHit extends RawTOFHit implements HitWithDCPositionEnergyTimeInfo  {
 
     private double energy, time; /* Recon objects */
     private Point3D p0; /* p0 in the SECTOR ref. frame */
