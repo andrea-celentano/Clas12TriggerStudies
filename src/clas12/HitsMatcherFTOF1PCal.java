@@ -192,7 +192,8 @@ public class HitsMatcherFTOF1PCal {
         this.multiplicity = multiplicity_;
         this.EminFTOF = EminFTOF_;
         this.EminPCAL = EminPCAL_;
-        this.minPaddle1BAlone = 56;
+        this.minPaddle1BAlone = 58;
+//        this.minPaddle1BAlone = 65;
         this.DC = DC_;
 
         this.layerHasHit = new boolean[5];
@@ -248,10 +249,7 @@ public class HitsMatcherFTOF1PCal {
      */
     public List<MatchedFTOF1PCALHits> MatchHits(List<ReconTOFHit> hitsFTOF1A, List<ReconTOFHit> hitsFTOF1B, List<ECCluster> clustersPCAL) {
 
-        if (analysisClass.nevent==7139){
-            debug=true;
-        }
-        else debug=false;
+      
         
         double Tmin, T0, T1, T2;
         T0 = 0;

@@ -264,8 +264,8 @@ public class AnalysisClass {
             }
             // System.out.println("RESULT TRIG SSUM: "+nevent+" "+ii+" "+matchFTOF1PCAL[ii]);
             /* 2 */
-            for (RawTOFHit hit2 : hitsFTOF2[ii]) {
-                if ((hit2.get_TimeAVG() > this.Tmin) && (hit2.get_TimeAVG() < this.Tmin + this.Tcoinc)) {
+            for (RawTOFHit hit2 : hitsFTOF2[ii]) {        
+                if ((hit2.get_TimeAVG() > this.Tmin) && (hit2.get_TimeAVG() < this.Tmin + this.Tcoinc) && (hit2.getEnergy()>this.TH_minE_FTOF)) {
                     if ((TH_DC == 0) || ((TH_DC == 1) && sectorHasDCsegments[ii]) || ((TH_DC >= 2) && hit2.isMatchedToR3CrossProjection())) nFTOF2_thisEvent[ii]++;
                 }
             }
@@ -617,6 +617,7 @@ public class AnalysisClass {
         dataReader.setMinE_FTOF2(minE_FTOF2);
         dataReader.setMinE_FTOF1B(minE_FTOF1B);
         dataReader.setMinE_FTOF1A(minE_FTOF1A);
+        dataReader.setMinE_FTOF(this.TH_minE_FTOF);
 
         /* Also setup here what needed to read data */
         genParticles = new ArrayList<MatchedParticle>();
@@ -649,6 +650,7 @@ public class AnalysisClass {
         for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsMatcherFTOF1[ii] = new HitsMatcherFTOF1PCal(this, ii, this.TH_multiplicity, this.TH_deltaT, this.TH_deltaR, this.TH_minE_FTOF, this.TH_minE_PCAL, this.TH_DC);
             hitsMatcherFTOF1[ii].setRejectPCAL(true);
+            hitsMatcherFTOF1[ii].setRejectFTOF1A(true);
         }
 
         sectorHasDCsegments = new boolean[6];
@@ -714,6 +716,7 @@ public class AnalysisClass {
         System.out.println("Going to setup histograms");
         guiClass = new GuiClass(this);
         guiClass.setParray(Parray);
+        guiClass.setDeltaT(250.*1E-9);
         guiClass.setupHistograms();
         System.out.println("Setup histograms done");
     }
