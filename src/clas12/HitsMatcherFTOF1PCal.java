@@ -192,8 +192,8 @@ public class HitsMatcherFTOF1PCal {
         this.multiplicity = multiplicity_;
         this.EminFTOF = EminFTOF_;
         this.EminPCAL = EminPCAL_;
-        this.minPaddle1BAlone = 58;
-//        this.minPaddle1BAlone = 65;
+        //this.minPaddle1BAlone = 58;
+        this.minPaddle1BAlone = 65;
         this.DC = DC_;
 
         this.layerHasHit = new boolean[5];
@@ -249,8 +249,6 @@ public class HitsMatcherFTOF1PCal {
      */
     public List<MatchedFTOF1PCALHits> MatchHits(List<ReconTOFHit> hitsFTOF1A, List<ReconTOFHit> hitsFTOF1B, List<ECCluster> clustersPCAL) {
 
-      
-        
         double Tmin, T0, T1, T2;
         T0 = 0;
         List<MatchedFTOF1PCALHits> theReturnList = new ArrayList<MatchedFTOF1PCALHits>();
@@ -316,29 +314,21 @@ public class HitsMatcherFTOF1PCal {
                 System.out.println("HIT START BELOW");
                 System.out.println(analysisClass.nevent + " " + (sector + 1) + " -->" + T0 + " " + hitCurr.getDetectorID());
             }
-            /* Easier case - multiplicity is 1. Don't need to do anything, just add the hit - unless it was required to HAVE another detector */
-            if (multiplicity == 1) {
-                if ((DC <= 1) || (hitCurr.isMatchedToR3CrossProjection())) {
-                    theReturnList.add(new MatchedFTOF1PCALHits(T0, this.sector, 1));
+            while (iteratorCurr.hasNext()) {
+
+                hitNext = iteratorCurr.next();
+                T1 = hitNext.getTime();
+
+                if (debug) System.out.println("NEXT TO COMPARE: " + T1 + " " + hitNext.getDetectorID());
+
+                if ((T1 - T0) > this.Tcoinc) {
+                    break;
                 }
-                continue;
-            } else { /* For those cases when the multiplicity is > 1 */
-                while (iteratorCurr.hasNext()) {
-
-                    hitNext = iteratorCurr.next();
-                    T1 = hitNext.getTime();
-
-                    if (debug) System.out.println("NEXT TO COMPARE: " + T1 + " " + hitNext.getDetectorID());
-
-                    if ((T1 - T0) > this.Tcoinc) {
-                        break;
-                    }
-                    if (MatchHits(hitCurr, hitNext)) {
-                        if (debug) System.out.println("MATCHING HIT - REMOVE");
-                        layerHasHit[hitNext.getDetectorID()] = true;
-                        layerHasHitDC[hitNext.getDetectorID()] = hitNext.isMatchedToR3CrossProjection();
-                        iteratorCurr.remove();
-                    }
+                if (MatchHits(hitCurr, hitNext)) {
+                    if (debug) System.out.println("MATCHING HIT - REMOVE");
+                    layerHasHit[hitNext.getDetectorID()] = true;
+                    layerHasHitDC[hitNext.getDetectorID()] = hitNext.isMatchedToR3CrossProjection();
+                    iteratorCurr.remove();
                 }
             }
 
@@ -396,9 +386,7 @@ public class HitsMatcherFTOF1PCal {
     private boolean MatchGeo(HitWithDCPositionEnergyTimeInfo hit1, HitWithDCPositionEnergyTimeInfo hit2) {
         boolean ret = false;
         double distance;
-        
-      
-       
+
         /* These are in SECTOR ref. frame */
         Point3D p1 = new Point3D(hit1.getPosition());
         Point3D p2 = new Point3D(hit2.getPosition());

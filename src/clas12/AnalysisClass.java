@@ -264,8 +264,8 @@ public class AnalysisClass {
             }
             // System.out.println("RESULT TRIG SSUM: "+nevent+" "+ii+" "+matchFTOF1PCAL[ii]);
             /* 2 */
-            for (RawTOFHit hit2 : hitsFTOF2[ii]) {        
-                if ((hit2.get_TimeAVG() > this.Tmin) && (hit2.get_TimeAVG() < this.Tmin + this.Tcoinc) && (hit2.getEnergy()>this.TH_minE_FTOF)) {
+            for (RawTOFHit hit2 : hitsFTOF2[ii]) {
+                if ((hit2.get_TimeAVG() > this.Tmin) && (hit2.get_TimeAVG() < this.Tmin + this.Tcoinc) && (hit2.getEnergy() > this.TH_minE_FTOF)) {
                     if ((TH_DC == 0) || ((TH_DC == 1) && sectorHasDCsegments[ii]) || ((TH_DC >= 2) && hit2.isMatchedToR3CrossProjection())) nFTOF2_thisEvent[ii]++;
                 }
             }
@@ -365,7 +365,6 @@ public class AnalysisClass {
          */
         if (particle.isMatched()) {
 
-           
             guiClass.getHistogram2D("h2_ThetaPhiAllREC").fill(phi, theta);
             guiClass.getHistogram2D("h2_ThetaPhiAllREC_" + imom).fill(phi, theta);
 
@@ -406,12 +405,11 @@ public class AnalysisClass {
                 }
             }
 
-            else {
-                 if ((p > 5) && (theta > 20) && (theta < 30) && (phi > -5) && (phi < 5)) {
-                     System.out.println(nevent);
-                 }
-            }
         }/* end genParticleIsMatched (to a recon) */
+
+        else if ((p > 5) && (theta > 35) && (theta < 42) && (phi > -5) && (phi < 5)) {
+            System.out.println(nevent);
+        }
     }
 
     /* Inverse analysis */
@@ -487,9 +485,6 @@ public class AnalysisClass {
         if (nMatchingsDiffSectorsALL_thisEvent >= 2) nMatchings2FTOF_DifferentSectors_total++;
         if (nMatchingsDiffSectorsALL_thisEvent >= 3) nMatchings3FTOF_DifferentSectors_total++;
 
-        
-       
-        
     }
 
     private void endTimeAnalysis() {
@@ -526,8 +521,6 @@ public class AnalysisClass {
         System.out.println("coinc. rate in CLAS12 FTOF all sectors (1 - 2  - 3 ch particles) kHz: " + R1_FTOF + " - " + R2_FTOF + " - " + R3_FTOF);
         System.out.println("coinc. rate in CLAS12 FTOF-Different sectors (1 - 2  - 3 ch particles) kHz: " + R1_FTOF_DC + " - " + R2_FTOF_DC + " - " + R3_FTOF_DC);
 
-      
-        
     }
 
     /* Here starts non-physics related methods */
@@ -641,6 +634,7 @@ public class AnalysisClass {
         for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsFTOF1B[ii] = new ArrayList<ReconTOFHit>();
         }
+
         hitsFTOF1A = new ArrayList[AnalysisClass.nSectors_CLAS12];
         for (int ii = 0; ii < AnalysisClass.nSectors_CLAS12; ii++) {
             hitsFTOF1A[ii] = new ArrayList<ReconTOFHit>();
@@ -716,7 +710,7 @@ public class AnalysisClass {
         System.out.println("Going to setup histograms");
         guiClass = new GuiClass(this);
         guiClass.setParray(Parray);
-        guiClass.setDeltaT(250.*1E-9);
+        guiClass.setDeltaT(250. * 1E-9);
         guiClass.setupHistograms();
         System.out.println("Setup histograms done");
     }
@@ -823,7 +817,7 @@ public class AnalysisClass {
             DataBank hitsReconFTOF = event.getBank("FTOF::hits");
             int nHitsFTOF2 = dataReader.makeFTOFHits(hitsRawFTOF, hitsReconFTOF, hitsFTOF2, hitsFTOF1B, hitsFTOF1A, TH_DC, sectorHasDCsegments);
 
-            /* Perform matchings */         
+            /* Perform matchings */
             this.matchToClusters(crossesDC, clusters);
             this.matchToFTOFHits(3, crossesDC, hitsFTOF2); // FTOF2
             this.matchToFTOFHits(2, crossesDC, hitsFTOF1B); // FTOF1B
@@ -831,15 +825,15 @@ public class AnalysisClass {
 
             /*
              * Here do the "time-window analysis" that will determine trigger conditions.
-             */ 
+             */
             this.doTimeHistory();
 
             /*
              * Do a "direct" analysis if nGen==1
              */
             if (nGenParticles == 1) {
-                this.Tmin=0;
-                this.Tcoinc=9999;
+                this.Tmin = 0;
+                this.Tcoinc = 9999;
                 this.doDirectAnalysis();
             }
             /*
